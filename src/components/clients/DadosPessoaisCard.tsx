@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
-import { Input } from "../input/input";
+import { Input } from "../ui/input/input";
 import styles from "./DadosPessoaisCard.module.css";
-import { maskCPF, maskPhone, unmask } from "../../utils/maks";
+import { maskCPF, maskPhone, unmask } from "../../utils/masks";
 
 interface DadosPessoaisFormProps {
   title: string;

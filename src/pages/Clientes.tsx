@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "..//context/AuthContext"; // Importante para saber quem é o consultor
-import { FormNovoCliente } from "../components/form/FormNovoCliente";
-import { Modal } from "../components/modal/Modal"; // Ajustei o caminho conforme nossos passos anteriores
+import { FormNovoCliente } from "../components/clients/FormNovoCliente";
+import { Modal } from "../components/ui/modal/Modal"; // Ajustei o caminho conforme nossos passos anteriores
 import { UserPlus, Trash2, UserCheck, Clock } from "lucide-react";
 
 // Tipo para a listagem de Clientes

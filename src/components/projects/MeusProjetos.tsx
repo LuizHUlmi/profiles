@@ -1,8 +1,8 @@
 // src/components/meusProjetos/MeusProjetos.tsx
 
 import styles from "./MeusProjetos.module.css";
-import { ProjectCard } from "./cards/ProjectCard";
-import { ProjectColumn } from "./colunas/ProjectColumn";
+import { ProjectCard } from "./ProjectCard";
+import { ProjectColumn } from "./ProjectColumn";
 import type { Projeto } from "../../types/database";
 
 type MeusProjetosProps = {

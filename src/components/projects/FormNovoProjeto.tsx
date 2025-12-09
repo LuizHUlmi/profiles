@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
 import styles from "./FormNovoProjeto.module.css";
-import { Input } from "../input/input";
-import { maskCurrency, unmaskCurrency } from "../..//utils/maks";
+import { Input } from "../ui/input/input";
+import { maskCurrency, unmaskCurrency } from "../../utils/masks";
 import type { Projeto } from "../../types/database";
 // ... imports dos ícones (Plane, Car, etc) ...
 import {

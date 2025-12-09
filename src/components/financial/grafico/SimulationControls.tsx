@@ -1,7 +1,7 @@
 // src/components/simulacao/SimulacaoControls.tsx
 
+import { SliderControl } from "../../ui/slider/Slider";
 import styles from "./ControleGrafico.module.css"; // Se renomeou para SimulacaoControls.module.css, ajuste aqui
-import { SliderControl } from "../slider/Slider";
 
 type SimulacaoControlsProps = {
   idade: number;

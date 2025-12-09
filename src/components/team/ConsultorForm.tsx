@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
-import { Input } from "../input/input";
+import { Input } from "../ui/input/input";
 //import styles from "./ConsultorForm.module.css"; // Você pode copiar o CSS do outro form e ajustar
 
 type ConsultorFormData = {

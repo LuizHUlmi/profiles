@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { ConsultorForm } from "../components/form/ConsultorForm";
-import { Modal } from "../components/modal/Modal";
+import { Modal } from "../components/ui/modal/Modal";
 import { UserPlus, Trash2, Shield, User } from "lucide-react";
 
 // Tipo para a listagem

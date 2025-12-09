@@ -1,13 +1,13 @@
 // src/components/dados/DadosPessoaisCard.tsx
 
-import { Input } from "../input/input";
+import { Input } from "../ui/input/input";
 import styles from "../../components/form/DadosPessoaisCard.module.css"; // Usa os mesmos estilos de layout
 
 type EnderecoPessoalProps = {
   title: string;
 };
 
-export function EnderecoPssoal({ title }: EnderecoPessoalProps) {
+export function EnderecoPessoal({ title }: EnderecoPessoalProps) {
   return (
     <>
       <h1 className={styles.title}>{title}</h1>

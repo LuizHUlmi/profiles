@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { DadosPessoaisCard } from "../components/form/DadosPessoaisCard"; // Novo import
+import { DadosPessoaisCard } from "../components/clients/DadosPessoaisCard"; // Novo import
 import styles from "./perfil.module.css"; // Seus estilos de layout
-import { EnderecoPssoal } from "../components/form/EnderecoPessoal";
+import { EnderecoPssoal } from "../components/clients/EnderecoPessoal";
 
 export function Perfil() {
   // 1. Estado para controlar a exibição do formulário do cônjuge

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { Input } from "../components/input/input";
+import { Input } from "../components/ui/input/input";
 
 // Schemas de Validação
 const loginSchema = z.object({
