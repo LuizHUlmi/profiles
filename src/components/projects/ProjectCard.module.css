@@ -1,68 +1,71 @@
-/* src/components/meusProjetos/ProjectCard.module.css */
+/* src/components/projects/ProjectCard.module.css */
 
 .projectCard {
-  background-color: #fefefe;
-  border: 1px solid #eee;
-  border-radius: 6px;
+  background-color: var(
+    --bg-page
+  ); /* Fundo levemente cinza para destacar do branco da coluna */
+  border: 1px solid transparent; /* Sem borda por padrão */
+  border-radius: var(--radius-sm);
   padding: 1rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
   cursor: pointer;
-
-  /* Garante que o card ocupe a largura disponível na coluna */
-  width: 100%;
-  box-sizing: border-box;
+  position: relative;
 }
 
 .projectCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-color: var(--primary); /* Borda azul ao passar o mouse */
+}
+
+/* Estado Inativo (transparente/apagado) */
+.inactiveCard {
+  opacity: 0.6;
+  filter: grayscale(100%);
+  background-color: #f1f5f9;
 }
 
 .cardHeader {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; /* Alinha no topo caso o título seja longo */
-  margin-bottom: 0.5rem;
+  align-items: flex-start;
   gap: 10px;
+  margin-bottom: 0.5rem;
 }
 
 .cardHeader h5 {
-  font-size: 1rem;
-  color: #333;
+  font-size: 0.95rem;
+  color: var(--text-primary);
   margin: 0;
   font-weight: 600;
-  flex: 1; /* O título ocupa o espaço sobrando */
   line-height: 1.4;
+  flex: 1;
 }
 
-/* Área dos Botões (Toggle + Edit + Delete) */
 .cardControls {
   display: flex;
   align-items: center;
-  gap: 0.5rem; /* Espaço entre os botões */
-  flex-shrink: 0; /* Impede que os botões sejam esmagados */
+  gap: 0.5rem;
 }
 
 .cardValue {
   font-size: 1.1rem;
-  font-weight: bold;
-  color: #444;
-  margin-bottom: 0.5rem;
-  margin-top: 0; /* Remove margem topo padrão do p */
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0.25rem 0;
 }
 
 .cardDetail {
-  font-size: 0.85rem;
-  color: #777;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
-/* --- Botões de Ação --- */
+/* Botões de Ação (Lápis/Lixo) */
 .iconButton {
   background: none;
   border: none;
   cursor: pointer;
-  color: #9ca3af; /* Cinza claro */
+  color: var(--text-secondary);
   padding: 4px;
   border-radius: 4px;
   display: flex;
@@ -72,29 +75,28 @@
 }
 
 .iconButton:hover {
-  background-color: #f3f4f6;
-  color: #007bff; /* Azul ao passar o mouse */
+  background-color: rgba(0, 123, 255, 0.1);
+  color: var(--primary);
 }
 
 .deleteButton:hover {
   background-color: #fee2e2;
-  color: #dc2626; /* Vermelho ao passar o mouse */
+  color: var(--danger);
 }
 
-/* --- Toggle Switch --- */
+/* Switch Pequeno para o Card */
 .switch {
   position: relative;
   display: inline-block;
-  width: 32px; /* Reduzi um pouco para ficar mais compacto */
-  height: 18px;
+  width: 28px;
+  height: 16px;
 }
-
+/* ... (pode reutilizar o estilo do switch da coluna se quiser, mas ajustando tamanhos) ... */
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-
 .slider {
   position: absolute;
   cursor: pointer;
@@ -106,27 +108,20 @@
   transition: 0.4s;
   border-radius: 34px;
 }
-
 .slider:before {
   position: absolute;
   content: "";
-  height: 14px;
-  width: 14px;
+  height: 12px;
+  width: 12px;
   left: 2px;
   bottom: 2px;
   background-color: white;
   transition: 0.4s;
   border-radius: 50%;
 }
-
 input:checked + .slider {
-  background-color: #2196f3;
+  background-color: var(--primary);
 }
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #2196f3;
-}
-
 input:checked + .slider:before {
-  transform: translateX(14px);
+  transform: translateX(12px);
 }

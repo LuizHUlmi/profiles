@@ -1,13 +1,14 @@
-// src/components/forms/FormNovoProjeto.tsx
+// src/components/projects/ProjectForm.tsx
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
 import styles from "./FormNovoProjeto.module.css";
 import { Input } from "../ui/input/input";
-import { maskCurrency, unmaskCurrency } from "../../utils/masks";
+import { Button } from "../ui/button/Button"; // <--- Novo Import
+import { maskCurrency, unmaskCurrency } from "../../utils/masks"; // Ajuste o path se necessário
 import type { Projeto } from "../../types/database";
-// ... imports dos ícones (Plane, Car, etc) ...
+// ... (Mantenha seus imports de ícones: Plane, Car, etc) ...
 import {
   Plane,
   Car,
@@ -26,7 +27,7 @@ import {
 type FormNovoProjetoProps = {
   onClose: () => void;
   onSuccess: () => void;
-  projectToEdit?: Projeto | null; // Novo: Projeto para editar (opcional)
+  projectToEdit?: Projeto | null;
 };
 
 type ProjectFormData = {
@@ -37,21 +38,19 @@ type ProjectFormData = {
   prazo: string;
   repeticao: string;
   qtdRepeticoes: string;
-  dataInicial: string;
 };
 
-export function FormNovoProjeto({
+export function ProjectForm({
   onClose,
   onSuccess,
   projectToEdit,
 }: FormNovoProjetoProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Valores padrão (vazios se for criar, preenchidos se for editar)
   const defaultValues = {
     prioridade: projectToEdit?.prioridade || "essencial",
-    tipo: "Outro", // Você poderia salvar o 'tipo' no banco para recuperar aqui também
-    prazo: "nao", // Simplificação: assumindo 'nao' se não tiver lógica de parsing do prazo
+    tipo: "Outro",
+    prazo: "nao",
     valor: projectToEdit ? maskCurrency(String(projectToEdit.valor * 100)) : "",
     nome: projectToEdit?.nome || "",
   };
@@ -63,7 +62,6 @@ export function FormNovoProjeto({
   const selectedPrioridade = watch("prioridade");
   const selectedTipo = watch("tipo");
 
-  // Ícones (Mantenha sua lista de ícones aqui)
   const projectTypes = [
     { icon: Plane, label: "Viagem" },
     { icon: Car, label: "Veículo" },
@@ -96,22 +94,16 @@ export function FormNovoProjeto({
             : "À vista",
       };
 
-      let error;
-
       if (projectToEdit) {
-        // --- MODO EDIÇÃO (UPDATE) ---
-        const response = await supabase
+        const { error } = await supabase
           .from("projetos")
           .update(payload)
-          .eq("id", projectToEdit.id); // Busca pelo ID
-        error = response.error;
+          .eq("id", projectToEdit.id);
+        if (error) throw error;
       } else {
-        // --- MODO CRIAÇÃO (INSERT) ---
-        const response = await supabase.from("projetos").insert(payload);
-        error = response.error;
+        const { error } = await supabase.from("projetos").insert(payload);
+        if (error) throw error;
       }
-
-      if (error) throw error;
 
       alert(projectToEdit ? "Projeto atualizado!" : "Projeto criado!");
       onSuccess();
@@ -130,9 +122,7 @@ export function FormNovoProjeto({
         {projectToEdit ? "Editar Projeto" : "Novo Projeto"}
       </h3>
 
-      {/* ... (Todo o resto do seu formulário, seções de radio, inputs, etc. permanece igual) ... */}
-      {/* Vou abreviar aqui para focar na lógica, mas mantenha seus Inputs do passo anterior */}
-
+      {/* Prioridade */}
       <div className={styles.formSection}>
         <label>Prioridade do projeto</label>
         <div className={styles.buttonRadioGroup}>
@@ -149,10 +139,8 @@ export function FormNovoProjeto({
         </div>
       </div>
 
-      {/* ... Seção Tipo ... */}
+      {/* Tipos (Ícones) */}
       <div className={styles.formSection}>
-        {/* ... Mantenha o código dos ícones ... */}
-        {/* Se quiser copiar do anterior, é o bloco .iconRadioGroup */}
         <label>Tipo do projeto</label>
         <div className={styles.iconRadioGroup}>
           {projectTypes.map((type) => (
@@ -171,6 +159,7 @@ export function FormNovoProjeto({
         </div>
       </div>
 
+      {/* Inputs */}
       <div className={styles.formGrid}>
         <div className={styles.fullWidth}>
           <Input label="Nome" {...register("nome", { required: true })} />
@@ -184,29 +173,22 @@ export function FormNovoProjeto({
             })}
           />
         </div>
-        {/* ... Outros inputs (data, prazo, etc) ... */}
       </div>
 
+      {/* RODAPÉ COM NOVOS BOTÕES */}
       <div className={styles.formFooter}>
-        <button
+        <Button
           type="button"
-          className={styles.cancelButton}
+          variant="ghost"
           onClick={onClose}
           disabled={isSubmitting}
         >
           Cancelar
-        </button>
-        <button
-          type="submit"
-          className={styles.submitButton}
-          disabled={isSubmitting}
-        >
-          {isSubmitting
-            ? "Salvando..."
-            : projectToEdit
-            ? "Salvar Alterações"
-            : "Criar Projeto"}
-        </button>
+        </Button>
+
+        <Button type="submit" loading={isSubmitting}>
+          {projectToEdit ? "Salvar Alterações" : "Criar Projeto"}
+        </Button>
       </div>
     </form>
   );

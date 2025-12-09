@@ -1,43 +1,47 @@
-/* src/components/projetos/ProjectColumn.module.css */
+/* src/components/projects/ProjectColumn.module.css */
 
 .projectColumn {
-  background-color: #fff; /* Fundo branco para cada coluna */
-  border-radius: 8px;
+  background-color: var(--bg-card); /* Branco */
+  border-radius: var(--radius-md);
   padding: 1rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); /* Borda sutil */
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* Espaço entre os cards dentro da coluna */
+  gap: 1rem;
 }
 
 .columnHeader {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center; /* Centraliza verticalmente */
   margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color); /* Separador sutil */
 }
 
-.columnHeader h4 {
-  font-size: 1.1rem;
-  color: #333;
+.titleArea h4 {
+  font-size: 1rem;
+  color: var(--text-primary);
   margin: 0;
+  font-weight: 600;
+  text-transform: uppercase; /* Estilo opcional para títulos de coluna */
+  letter-spacing: 0.5px;
+  font-size: 0.85rem;
 }
 
 .columnTotal {
   font-size: 0.9rem;
-  color: #666;
-  font-weight: 500;
+  color: var(--success); /* Verde para dinheiro */
+  font-weight: 600;
 }
 
-/* Adicione este CSS no final do ProjectColumn.module.css */
-/* (E remova o .columnCheckbox se você o adicionou) */
-
-/* Estilos para o Toggle Switch */
+/* Switch (Slider) - Ajustado para usar a cor primária */
 .switch {
   position: relative;
   display: inline-block;
-  width: 38px;
-  height: 22px;
+  width: 32px;
+  height: 18px;
 }
 
 .switch input {
@@ -53,35 +57,27 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
+  background-color: #cbd5e1; /* Cinza inativo */
+  transition: 0.3s;
   border-radius: 34px;
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 16px;
-  width: 16px;
-  left: 3px;
-  bottom: 3px;
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
   background-color: white;
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
+  transition: 0.3s;
   border-radius: 50%;
 }
 
 input:checked + .slider {
-  background-color: #2196f3; /* Azul quando ligado */
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #2196f3;
+  background-color: var(--success); /* Verde quando ativo (ou var(--primary)) */
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateX(16px);
-  -ms-transform: translateX(16px);
-  transform: translateX(16px);
+  transform: translateX(14px);
 }

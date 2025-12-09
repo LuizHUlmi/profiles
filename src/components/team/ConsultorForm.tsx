@@ -1,10 +1,10 @@
-// src/components/forms/ConsultorForm.tsx
+// src/components/clients/ConsultantForm.tsx
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
 import { Input } from "../ui/input/input";
-//import styles from "./ConsultorForm.module.css"; // Você pode copiar o CSS do outro form e ajustar
+import { Button } from "../ui/button/Button"; // <--- Novo Import
 
 type ConsultorFormData = {
   nome: string;
@@ -17,7 +17,7 @@ interface ConsultorFormProps {
   onSuccess?: () => void;
 }
 
-export function ConsultorForm({ onClose, onSuccess }: ConsultorFormProps) {
+export function ConsultantForm({ onClose, onSuccess }: ConsultorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
@@ -28,7 +28,6 @@ export function ConsultorForm({ onClose, onSuccess }: ConsultorFormProps) {
   const onSubmit = async (data: ConsultorFormData) => {
     setIsSubmitting(true);
     try {
-      // Salva na tabela separada 'consultores'
       const { error } = await supabase.from("consultores").insert({
         nome: data.nome,
         email: data.email,
@@ -49,16 +48,14 @@ export function ConsultorForm({ onClose, onSuccess }: ConsultorFormProps) {
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h3>Novo Membro da Equipe</h3>
+    <div style={{ padding: "1rem", minWidth: "350px" }}>
+      <h3 style={{ marginTop: 0, marginBottom: "1.5rem" }}>
+        Novo Membro da Equipe
+      </h3>
+
       <form
         onSubmit={handleSubmit(onSubmit)}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-          marginTop: "1rem",
-        }}
+        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
       >
         <Input
           label="Nome Completo"
@@ -75,9 +72,8 @@ export function ConsultorForm({ onClose, onSuccess }: ConsultorFormProps) {
           {...register("email", { required: "E-mail obrigatório" })}
         />
 
-        {/* Select simples para o nível */}
         <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+          style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}
         >
           <label style={{ fontSize: "0.9rem", fontWeight: 500, color: "#333" }}>
             Nível de Acesso
@@ -88,6 +84,8 @@ export function ConsultorForm({ onClose, onSuccess }: ConsultorFormProps) {
               padding: "0.75rem",
               borderRadius: "6px",
               border: "1px solid #ccc",
+              backgroundColor: "white",
+              fontSize: "1rem",
             }}
           >
             <option value="consultor">Consultor</option>
@@ -95,6 +93,7 @@ export function ConsultorForm({ onClose, onSuccess }: ConsultorFormProps) {
           </select>
         </div>
 
+        {/* RODAPÉ COM NOVOS BOTÕES */}
         <div
           style={{
             display: "flex",
@@ -103,33 +102,18 @@ export function ConsultorForm({ onClose, onSuccess }: ConsultorFormProps) {
             marginTop: "20px",
           }}
         >
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onClose}
-            style={{
-              padding: "10px 20px",
-              border: "none",
-              background: "#eee",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
+            disabled={isSubmitting}
           >
             Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            style={{
-              padding: "10px 20px",
-              border: "none",
-              background: "#007bff",
-              color: "white",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
-          >
-            {isSubmitting ? "Salvando..." : "Cadastrar"}
-          </button>
+          </Button>
+
+          <Button type="submit" loading={isSubmitting}>
+            Cadastrar
+          </Button>
         </div>
       </form>
     </div>
