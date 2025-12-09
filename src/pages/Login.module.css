@@ -1,0 +1,93 @@
+/* src/pages/Login.module.css */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--bg-page); /* Usa a variável global */
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--bg-card);
+  padding: 2rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.toggleContainer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.toggleBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
+}
+
+.activeToggle {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: bold;
+}
+
+.submitBtn {
+  padding: 0.75rem;
+  background-color: var(--primary);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 1rem;
+  transition: background-color 0.2s;
+}
+
+.submitBtn:hover {
+  background-color: var(--primary-hover);
+}
+
+.submitBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Para o botão de cadastro, podemos usar uma variação ou a mesma classe */
+.registerBtn {
+  background-color: var(--success);
+}
+.registerBtn:hover {
+  background-color: #15803d; /* Um verde mais escuro hardcoded ou var(--success-hover) */
+}
+
+.message {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.errorMsg {
+  background-color: #fee2e2;
+  color: var(--danger);
+}
+.successMsg {
+  background-color: #dcfce7;
+  color: var(--success);
+}

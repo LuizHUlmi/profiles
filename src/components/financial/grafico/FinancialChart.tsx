@@ -1,42 +1,62 @@
-// src/components/grafico/GraficoFinanceiro.tsx
+// src/components/financial/FinancialChart.tsx
 
 import ReactECharts from "echarts-for-react";
 
-type GraficoFinanceiroProps = {
+type FinancialChartProps = {
   ages: number[];
   years: string[];
   dataProjected: number[];
 };
 
-export function GraficoFinanceiro({
+export function FinancialChart({
   ages,
   years,
   dataProjected,
-}: GraficoFinanceiroProps) {
+}: FinancialChartProps) {
+  // Cores alinhadas com o index.css (Design System)
+  const colors = {
+    primary: "#007bff", // var(--primary)
+    primaryLight: "rgba(0, 123, 255, 0.2)",
+    text: "#333333", // var(--text-primary)
+    textLight: "#666666", // var(--text-secondary)
+    grid: "#e0e0e0", // var(--border-color)
+  };
+
   const options = {
     title: {
       text: "Projeção de Patrimônio",
-      left: "center",
-      textStyle: { color: "#333", fontSize: 18, fontWeight: "normal" },
+      left: "0",
+      textStyle: {
+        color: colors.text,
+        fontSize: 16,
+        fontWeight: "600",
+        fontFamily: "Inter, sans-serif",
+      },
     },
     tooltip: {
       trigger: "axis",
+      backgroundColor: "rgba(255, 255, 255, 0.95)",
+      borderColor: colors.grid,
+      borderWidth: 1,
+      textStyle: { color: colors.text },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       formatter: function (params: any[]) {
-        // No tooltip, mostramos o mês exato (ex: Jan/2025)
-        let result = `<div style="font-size: 14px; margin-bottom: 5px;">${
-          params[0].axisValue // Mostra "Jan/2025"
-        } (${ages[params[0].dataIndex]} anos)</div>`;
+        const index = params[0].dataIndex;
+        // Cabeçalho do Tooltip
+        let result = `<div style="margin-bottom: 8px; font-weight: 600; color: ${colors.textLight}">
+                        ${params[0].axisValue} <span style="font-weight:normal">(${ages[index]} anos)</span>
+                      </div>`;
 
-        params.forEach(function (item) {
-          result += `<div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${
-              item.color
-            };"></span>
-            <span style="flex-grow: 1; margin-right: 10px;">${
-              item.seriesName
-            }:</span>
-            <span style="font-weight: bold;">${new Intl.NumberFormat("pt-BR", {
+        // Itens do Tooltip
+        params.forEach((item) => {
+          result += `<div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; font-size: 14px;">
+            <div style="display:flex; align-items:center; gap: 6px;">
+                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background-color:${
+                  item.color
+                };"></span>
+                <span>${item.seriesName}</span>
+            </div>
+            <span style="font-weight: 700;">${new Intl.NumberFormat("pt-BR", {
               style: "currency",
               currency: "BRL",
             }).format(item.value)}</span>
@@ -44,21 +64,15 @@ export function GraficoFinanceiro({
         });
         return result;
       },
-      backgroundColor: "rgba(255, 255, 255, 0.9)",
-      borderColor: "#ccc",
-      borderWidth: 1,
-      padding: [10, 15],
-    },
-    legend: {
-      bottom: 0,
-      data: [{ name: "Patrimônio Total", icon: "circle" }],
-      textStyle: { color: "#555" },
+      padding: [12, 16],
+      extraCssText:
+        "box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); border-radius: 8px;",
     },
     grid: {
-      left: "3%",
-      right: "4%",
-      bottom: "15%",
-      top: "10%",
+      left: "0",
+      right: "2%",
+      bottom: "3%",
+      top: "15%",
       containLabel: true,
     },
     xAxis: {
@@ -66,18 +80,15 @@ export function GraficoFinanceiro({
       boundaryGap: false,
       data: years,
       axisLabel: {
-        // --- AQUI ESTÁ O TRUQUE ---
-        // Como temos dados mensais, 12 pontos = 1 ano.
-        // interval: 59 significa: mostre o rótulo a cada 60 pontos (5 anos).
-        interval: 59,
+        interval: 59, // Mostra a cada 5 anos (12 meses * 5 - 1)
         formatter: (value: string, index: number) => {
-          // value vem como "Jan/2025". Pegamos só o ano.
           const ano = value.split("/")[1];
           return `${ano}\n${ages[index]} anos`;
         },
-        color: "#777",
+        color: colors.textLight,
+        fontSize: 11,
       },
-      axisLine: { lineStyle: { color: "#ccc" } },
+      axisLine: { show: false },
       axisTick: { show: false },
     },
     yAxis: {
@@ -88,23 +99,38 @@ export function GraficoFinanceiro({
           if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}k`;
           return value;
         },
-        color: "#777",
+        color: colors.textLight,
+        fontSize: 11,
       },
-      splitLine: { lineStyle: { type: "dashed", color: "#e0e0e0" } },
-      axisLine: { show: false },
+      splitLine: {
+        lineStyle: {
+          type: "dashed",
+          color: colors.grid,
+        },
+      },
     },
     series: [
       {
         name: "Patrimônio Total",
         type: "line",
-        smooth: true, // Deixa a curva mensal bem suave
-        symbol: "none",
+        smooth: 0.3,
+        showSymbol: false,
         lineStyle: {
-          color: "#FF9800",
+          color: colors.primary,
           width: 3,
         },
         areaStyle: {
-          color: "rgba(255, 152, 0, 0.2)",
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: colors.primaryLight },
+              { offset: 1, color: "rgba(0, 123, 255, 0)" },
+            ],
+          },
         },
         data: dataProjected,
       },

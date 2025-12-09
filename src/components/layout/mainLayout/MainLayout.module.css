@@ -2,12 +2,17 @@
 
 .layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh; /* Trava a altura na tela inteira */
+  width: 100vw; /* Trava a largura */
+  overflow: hidden; /* Impede que a página inteira role */
 }
 
 .content {
-  flex: 1; /* Ocupa todo o espaço restante */
+  flex: 1; /* Ocupa todo o espaço restante ao lado da sidebar */
   padding: 2rem;
-  background-color: #f4f7fa;
-  overflow-y: auto; /* Adiciona scroll se o conteúdo for muito grande */
+  background-color: var(--bg-page);
+
+  /* A MÁGICA: */
+  overflow-y: auto; /* Cria scroll SÓ aqui dentro se o conteúdo for grande */
+  height: 100%; /* Garante que o container de scroll ocupe a altura disponível */
 }

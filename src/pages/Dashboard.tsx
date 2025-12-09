@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useFinancialProjection } from "../hooks/useFinancialProjection";
 
 // Componentes
-import { GraficoFinanceiro } from "../components/financial/grafico/FinancialChart";
+
 import { MeusProjetos } from "../components/projects/MeusProjetos";
 import { SimulacaoControls } from "../components/financial/grafico/SimulationControls";
 import { Modal } from "../components/ui/modal/Modal";
@@ -13,6 +13,7 @@ import { FormNovoProjeto } from "../components/projects/FormNovoProjeto";
 // Tipos e Estilos
 import type { Projeto, Simulacao } from "../types/database";
 import styles from "./Dashboard.module.css";
+import { FinancialChart } from "../components/financial/grafico/FinancialChart";
 
 export function Dashboard() {
   const { profile } = useAuth();
@@ -176,7 +177,7 @@ export function Dashboard() {
       <div className={styles.dashboardLayout}>
         {/* Gráfico */}
         <div>
-          <GraficoFinanceiro
+          <FinancialChart
             ages={ages}
             years={years}
             dataProjected={dataProjected}

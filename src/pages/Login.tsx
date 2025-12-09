@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
+
+import styles from "./Login.module.css"; // Import do CSS Module
 import { Input } from "../components/ui/input/input";
 
 // Schemas de Validação
@@ -15,7 +17,7 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  nome: z.string().min(3, "Nome é obrigatório"), // Campo extra para cadastro
+  nome: z.string().min(3, "Nome é obrigatório"),
   email: z.string().email("E-mail inválido"),
   password: z.string().min(6, "Mínimo 6 caracteres"),
 });
@@ -25,14 +27,13 @@ type RegisterData = z.infer<typeof registerSchema>;
 
 export function Login() {
   const navigate = useNavigate();
-  const [isLoginMode, setIsLoginMode] = useState(true); // Controla se é Login ou Cadastro
+  const [isLoginMode, setIsLoginMode] = useState(true);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
     text: string;
     type: "error" | "success";
   } | null>(null);
 
-  // Forms separados para não confundir a validação
   const loginForm = useForm<LoginData>({ resolver: zodResolver(loginSchema) });
   const registerForm = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
@@ -64,7 +65,7 @@ export function Login() {
       password: data.password,
       options: {
         data: {
-          full_name: data.nome, // Envia o nome para ser usado no Trigger
+          full_name: data.nome,
         },
       },
     });
@@ -76,55 +77,27 @@ export function Login() {
         text: "Cadastro realizado! Verifique seu e-mail para confirmar.",
         type: "success",
       });
-      // Opcional: Se o Supabase estiver com "Confirm Email" desligado, ele já loga direto.
     }
     setLoading(false);
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        backgroundColor: "#f4f7fa",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "400px",
-          backgroundColor: "white",
-          padding: "2rem",
-          borderRadius: "8px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-        }}
-      >
-        {/* Título e Alternador */}
+    <div className={styles.container}>
+      <div className={styles.card}>
+        {/* Cabeçalho */}
         <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          <h2 style={{ color: "#333", marginBottom: "0.5rem" }}>Profiles</h2>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "1rem",
-              fontSize: "0.9rem",
-            }}
-          >
+          <h2 className={styles.title}>Profiles</h2>
+
+          {/* Alternador Login / Cadastro */}
+          <div className={styles.toggleContainer}>
             <button
               onClick={() => {
                 setIsLoginMode(true);
                 setMessage(null);
               }}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: isLoginMode ? "bold" : "normal",
-                color: isLoginMode ? "#007bff" : "#666",
-                borderBottom: isLoginMode ? "2px solid #007bff" : "none",
-              }}
+              className={`${styles.toggleBtn} ${
+                isLoginMode ? styles.activeToggle : ""
+              }`}
             >
               Entrar
             </button>
@@ -133,32 +106,21 @@ export function Login() {
                 setIsLoginMode(false);
                 setMessage(null);
               }}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: !isLoginMode ? "bold" : "normal",
-                color: !isLoginMode ? "#007bff" : "#666",
-                borderBottom: !isLoginMode ? "2px solid #007bff" : "none",
-              }}
+              className={`${styles.toggleBtn} ${
+                !isLoginMode ? styles.activeToggle : ""
+              }`}
             >
               Criar Conta
             </button>
           </div>
         </div>
 
-        {/* Mensagens de Erro/Sucesso */}
+        {/* Mensagens de Feedback */}
         {message && (
           <div
-            style={{
-              padding: "10px",
-              marginBottom: "15px",
-              borderRadius: "4px",
-              fontSize: "0.9rem",
-              textAlign: "center",
-              backgroundColor: message.type === "error" ? "#fee2e2" : "#dcfce7",
-              color: message.type === "error" ? "#dc2626" : "#16a34a",
-            }}
+            className={`${styles.message} ${
+              message.type === "error" ? styles.errorMsg : styles.successMsg
+            }`}
           >
             {message.text}
           </div>
@@ -187,16 +149,7 @@ export function Login() {
             <button
               type="submit"
               disabled={loading}
-              style={{
-                padding: "0.75rem",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                fontWeight: "bold",
-                cursor: "pointer",
-                opacity: loading ? 0.7 : 1,
-              }}
+              className={styles.submitButton}
             >
               {loading ? "Entrando..." : "Acessar"}
             </button>
@@ -230,16 +183,7 @@ export function Login() {
             <button
               type="submit"
               disabled={loading}
-              style={{
-                padding: "0.75rem",
-                backgroundColor: "#28a745",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                fontWeight: "bold",
-                cursor: "pointer",
-                opacity: loading ? 0.7 : 1,
-              }}
+              className={`${styles.submitBtn} ${styles.registerBtn}`}
             >
               {loading ? "Criando..." : "Criar Conta"}
             </button>

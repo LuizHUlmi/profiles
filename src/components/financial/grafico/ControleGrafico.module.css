@@ -1,20 +1,24 @@
-/* src/components/simulacao/SimulacaoControls.module.css */
+/* src/components/financial/SimulationControls.module.css */
 
 .container {
-  background-color: #fff;
-  border-radius: 8px;
+  background-color: var(--bg-card); /* Branco */
+  border-radius: var(--radius-md);
   padding: 1.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); /* Borda sutil */
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  height: fit-content; /* Para se ajustar à altura do conteúdo */
+  height: fit-content;
 }
 
 .container h4 {
   margin: 0;
-  font-size: 1.25rem;
-  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
 }
 
 .editButton {
@@ -22,19 +26,38 @@
   border: none;
   cursor: pointer;
   font-size: 0.9rem;
-  color: #888;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.editButton:hover {
+  color: var(--primary);
 }
 
 .footer {
   text-align: right;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .saveButton {
-  background: none;
+  background-color: var(--primary); /* Botão Azul Sólido */
+  color: var(--text-inverse);
   border: none;
-  color: #007bff;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.saveButton:hover {
+  background-color: var(--primary-hover);
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }

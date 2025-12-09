@@ -1,21 +1,51 @@
 /* src/index.css */
 
-/* CSS Reset: 
-  Remove a margem e o padding padrões do navegador.
-*/
+:root {
+  /* --- PALETA DE CORES GLOBAIS --- */
+
+  /* Azul Principal (Marca) */
+  --primary: #007bff;
+  --primary-hover: #0056b3;
+
+  /* Cores de Fundo */
+  --bg-page: #f4f7fa; /* Fundo cinza claro da página */
+  --bg-card: #ffffff; /* Fundo branco dos cards */
+  --bg-sidebar: #0c1e3b; /* Azul escuro da Sidebar */
+
+  /* Texto */
+  --text-primary: #333333; /* Texto principal (quase preto) */
+  --text-secondary: #666666; /* Texto secundário (cinza) */
+  --text-inverse: #ffffff; /* Texto claro (para fundos escuros) */
+
+  /* Status e Ações */
+  --success: #16a34a; /* Verde (Sucesso/Cadastro) */
+  --danger: #dc2626; /* Vermelho (Erro/Delete) */
+  --warning: #ca8a04; /* Amarelo/Laranja */
+  --border-color: #e0e0e0; /* Cinza claro para bordas */
+
+  /* Layout */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* CSS Reset Padrão */
 body,
 html {
   margin: 0;
   padding: 0;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-page); /* Já aplica o fundo na página toda */
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Boa Prática (Recomendado):
-  Faz com que o 'padding' e a 'border' 
-  sejam incluídos na largura/altura total do elemento, 
-  facilitando muito o layout.
-*/
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
 }
