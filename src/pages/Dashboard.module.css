@@ -1,0 +1,19 @@
+/* src/pages/Dashboard.module.css */
+
+.dashboardLayout {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Gráfico (2/3) | Controles (1/3) */
+  gap: 2rem;
+  align-items: flex-start; /* Alinha no topo */
+}
+
+/* Para telas menores, faz uma coluna só */
+@media (max-width: 1200px) {
+  .dashboardLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.projectsSection {
+  margin-top: 2rem;
+}

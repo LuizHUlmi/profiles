@@ -1,0 +1,75 @@
+/* src/components/forms/FormNovoCliente.module.css */
+
+.formContainer {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 400px;
+}
+
+.formContainer h3 {
+  margin-top: 0;
+}
+
+.formSection > label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.formSection input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* Garante que o padding não aumente o width total */
+}
+
+.formFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.cancelButton,
+.submitButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.cancelButton {
+  background: #eee;
+  color: #333;
+}
+.submitButton {
+  background: #007bff;
+  color: #fff;
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.note {
+  font-size: 0.9em;
+  color: #666;
+  border-left: 3px solid #007bff;
+  padding-left: 10px;
+  margin: 0;
+}
+
+.errorMessage {
+  color: #cc0000;
+  font-weight: 500;
+  background-color: #ffe0e0;
+  padding: 10px;
+  border-radius: 4px;
+}

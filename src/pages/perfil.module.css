@@ -1,0 +1,50 @@
+/* src/pages/MeusDados.module.css (ou onde estiver seu componente) */
+
+.container {
+  max-width: 800px;
+  margin: 0 auto; /* Centraliza na tela */
+  padding: 2rem;
+}
+
+.title {
+  color: #2c80ff; /* Azul similar ao da imagem */
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background-color: #fff;
+  border: 1px solid #e0e0e0; /* Borda cinza suave */
+  border-radius: 8px; /* Cantos arredondados */
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); /* Sombra muito leve */
+
+  /* --- A MÁGICA DO GRID --- */
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Duas colunas iguais */
+  gap: 1.5rem; /* Espaço entre os inputs */
+}
+
+/* Classe para itens que devem ocupar a largura total */
+.fullWidth {
+  grid-column: span 2; /* Ocupa as 2 colunas */
+}
+
+/* Estilo do Botão Salvar */
+.saveButton {
+  background-color: #0d25aa; /* Verde escuro (Teal) */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: fit-content; /* O botão ocupa apenas o espaço do texto */
+  margin-top: 1rem;
+}
+
+.saveButton:hover {
+  background-color: #0d25aa;
+}

@@ -1,0 +1,93 @@
+/* src/components/layout/Sidebar.module.css */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 250px; /* Largura expandida */
+  height: 100vh;
+  background-color: #0c1e3b; /* Um azul bem escuro, similar ao bg-blue-950 */
+  color: #e0e0e0;
+  transition: width 0.3s ease-in-out;
+  border-right: 1px solid #1a2942;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.collapsed {
+  width: 70px; /* Largura colapsada (só para os ícones) */
+}
+
+/* --- Cabeçalho (Botão) --- */
+.header {
+  padding: 1rem;
+  display: flex;
+  justify-content: center; /* Centraliza o ícone quando colapsado */
+  border-bottom: 1px solid #1a2942;
+}
+
+.sidebar:not(.collapsed) .header {
+  justify-content: flex-end; /* Alinha à direita quando expandido */
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  color: #9ab;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+.toggleButton:hover {
+  color: #fff;
+  background-color: #1a2942;
+}
+
+/* --- Navegação (Links) --- */
+.nav {
+  flex: 1; /* Ocupa todo o espaço do meio */
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Espaço entre os links */
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Espaço entre ícone e texto */
+  padding: 0.75rem 1.5rem;
+  margin: 0 0.75rem; /* Margem lateral */
+
+  color: #c0d0e0;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar.collapsed .navLink {
+  justify-content: center; /* Centraliza o ícone */
+  padding: 0.75rem;
+  margin: 0 0.5rem;
+}
+
+.navLink:hover {
+  background-color: #1a2942; /* Similar ao hover:bg-blue-900 */
+  color: #fff;
+}
+
+.activeLink {
+  background-color: #2a4a7d; /* Similar ao bg-blue-800 */
+  color: #fff;
+  font-weight: 600;
+}
+
+/* --- Rodapé --- */
+.footer {
+  padding: 1.5rem;
+  border-top: 1px solid #1a2942;
+  text-align: center;
+  color: #6a7b9c;
+  /* Oculta o texto com 'white-space' para evitar quebra de linha na transição */
+  white-space: nowrap;
+  overflow: hidden;
+}

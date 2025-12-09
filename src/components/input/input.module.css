@@ -1,0 +1,38 @@
+/* src/components/ui/Input.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  margin-bottom: 1rem; /* Espaço entre um input e outro */
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.input {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: white;
+  color: #333;
+  width: 100%; /* Garante que preencha o espaço */
+}
+
+/* Quando tiver erro */
+.inputError {
+  border-color: #dc3545; /* Borda vermelha */
+  background-color: #fff8f8; /* Fundo levemente vermelho */
+}
+
+.errorMessage {
+  color: #dc3545; /* Texto Vermelho */
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: block; /* Garante que apareça */
+}

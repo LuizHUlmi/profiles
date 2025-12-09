@@ -1,0 +1,21 @@
+/* src/index.css */
+
+/* CSS Reset: 
+  Remove a margem e o padding padrões do navegador.
+*/
+body,
+html {
+  margin: 0;
+  padding: 0;
+}
+
+/* Boa Prática (Recomendado):
+  Faz com que o 'padding' e a 'border' 
+  sejam incluídos na largura/altura total do elemento, 
+  facilitando muito o layout.
+*/
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

@@ -1,0 +1,132 @@
+/* src/components/meusProjetos/ProjectCard.module.css */
+
+.projectCard {
+  background-color: #fefefe;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+
+  /* Garante que o card ocupe a largura disponível na coluna */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.projectCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Alinha no topo caso o título seja longo */
+  margin-bottom: 0.5rem;
+  gap: 10px;
+}
+
+.cardHeader h5 {
+  font-size: 1rem;
+  color: #333;
+  margin: 0;
+  font-weight: 600;
+  flex: 1; /* O título ocupa o espaço sobrando */
+  line-height: 1.4;
+}
+
+/* Área dos Botões (Toggle + Edit + Delete) */
+.cardControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Espaço entre os botões */
+  flex-shrink: 0; /* Impede que os botões sejam esmagados */
+}
+
+.cardValue {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #444;
+  margin-bottom: 0.5rem;
+  margin-top: 0; /* Remove margem topo padrão do p */
+}
+
+.cardDetail {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* --- Botões de Ação --- */
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af; /* Cinza claro */
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.iconButton:hover {
+  background-color: #f3f4f6;
+  color: #007bff; /* Azul ao passar o mouse */
+}
+
+.deleteButton:hover {
+  background-color: #fee2e2;
+  color: #dc2626; /* Vermelho ao passar o mouse */
+}
+
+/* --- Toggle Switch --- */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 32px; /* Reduzi um pouco para ficar mais compacto */
+  height: 18px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196f3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(14px);
+}

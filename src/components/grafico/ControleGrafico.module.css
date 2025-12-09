@@ -1,0 +1,40 @@
+/* src/components/simulacao/SimulacaoControls.module.css */
+
+.container {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: fit-content; /* Para se ajustar à altura do conteúdo */
+}
+
+.container h4 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.editButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.footer {
+  text-align: right;
+  margin-top: 1rem;
+}
+
+.saveButton {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}

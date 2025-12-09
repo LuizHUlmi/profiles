@@ -1,0 +1,61 @@
+/* src/components/ui/Modal.module.css */
+
+.modalOverlay {
+  position: fixed; /* Cobre a tela inteira */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Fundo preto semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Fica na frente de tudo */
+  animation: fadeIn 0.3s ease;
+}
+
+.modalContent {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  min-width: 400px;
+  max-width: 600px;
+  position: relative;
+  animation: slideUp 0.3s ease;
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+}
+
+.closeButton:hover {
+  color: #000;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
