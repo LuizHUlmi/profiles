@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useFinancialProjection } from "../hooks/useFinancialProjection";
-import { useProjects } from "../hooks/useProjects"; // <--- Hook novo
+import { useProjects } from "../hooks/useProjects";
 import { useToast } from "../components/ui/toast/ToastContext";
 import { useSearchParams } from "react-router-dom";
 import { calculateAge } from "../utils/date";
@@ -40,9 +40,8 @@ export function Dashboard() {
   const [activeProjectIds, setActiveProjectIds] = useState<number[]>([]);
 
   // --- SLIDERS & DADOS VITAIS ---
-  // Idade padrão temporária (caso não tenha data de nascimento)
   const [idadeAtual, setIdadeAtual] = useState(30);
-  const [idadeCalculada, setIdadeCalculada] = useState(false); // Para saber se veio do banco
+  const [idadeCalculada, setIdadeCalculada] = useState(false);
 
   const [patrimonioAtual, setPatrimonioAtual] = useState(0);
   const [idadeAposentadoria, setIdadeAposentadoria] = useState(65);
@@ -50,17 +49,18 @@ export function Dashboard() {
   const [outrasRendas, setOutrasRendas] = useState(0);
   const [investimentoMensal, setInvestimentoMensal] = useState(0);
 
-  // --- Projeção ---
-  const { ages, years, dataProjected } = useFinancialProjection({
-    idadeAtual,
-    patrimonioAtual,
-    idadeAposentadoria,
-    rendaDesejada,
-    outrasRendas,
-    investimentoMensal,
-    projects,
-    activeProjectIds,
-  });
+  // --- Projeção (Agora com dataWithProjects) ---
+  const { ages, years, dataProjected, dataWithProjects } =
+    useFinancialProjection({
+      idadeAtual,
+      patrimonioAtual,
+      idadeAposentadoria,
+      rendaDesejada,
+      outrasRendas,
+      investimentoMensal,
+      projects,
+      activeProjectIds,
+    });
 
   // --- 1. CARREGAMENTO GERAL ---
   useEffect(() => {
@@ -81,8 +81,7 @@ export function Dashboard() {
   ) => {
     try {
       // 1. BUSCAR DATA DE NASCIMENTO (PERFIL)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { data: perfil, error: perfilError } = await supabase
+      const { data: perfil } = await supabase
         .from("perfis")
         .select("data_nascimento")
         .eq("id", clientId)
@@ -93,12 +92,10 @@ export function Dashboard() {
         setIdadeAtual(idadeReal);
         setIdadeCalculada(true);
 
-        // Ajuste defensivo: Se a aposentadoria estava menor que a idade real, empurra pra frente
         if (idadeAposentadoria <= idadeReal) {
           setIdadeAposentadoria(idadeReal + 10);
         }
       } else {
-        // Se não tiver data, avisamos ou usamos padrão
         setIdadeCalculada(false);
       }
 
@@ -116,12 +113,10 @@ export function Dashboard() {
           .order("created_at", { ascending: false });
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { data: simData, error: simError } = await query.maybeSingle();
+      const { data: simData } = await query.maybeSingle();
 
       if (simData) {
         setCurrentSim(simData);
-        // Só sobrescrevemos sliders se a simulação existir
         setIdadeAposentadoria(simData.idade_aposentadoria);
         setRendaDesejada(simData.renda_desejada);
         setOutrasRendas(simData.outras_rendas);
@@ -135,19 +130,18 @@ export function Dashboard() {
           .eq("simulacao_id", simData.id);
         setActiveProjectIds(links ? links.map((l) => l.projeto_id) : []);
       } else {
-        // Reset se não houver simulação
         setCurrentSim(null);
         setActiveProjectIds([]);
         setPatrimonioAtual(0);
         setInvestimentoMensal(0);
-        // Mantemos a idade que calculamos no passo 1!
       }
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     }
   };
 
-  // --- AÇÕES (Salvar, Projetos...) permanecem iguais ---
+  // --- AÇÕES ---
+
   const handleSaveSimulation = async () => {
     if (!activeClientId) return;
     setIsSavingSim(true);
@@ -192,9 +186,12 @@ export function Dashboard() {
 
   const handleToggleProject = async (projectId: number, isActive: boolean) => {
     if (!currentSim) return toast.info("Crie um cenário primeiro.");
+
+    // Atualização Otimista
     setActiveProjectIds((prev) =>
       isActive ? [...prev, projectId] : prev.filter((id) => id !== projectId)
     );
+
     if (isActive)
       await supabase.from("simulacao_projetos").insert({
         simulacao_id: currentSim.id,
@@ -207,6 +204,59 @@ export function Dashboard() {
         .delete()
         .eq("simulacao_id", currentSim.id)
         .eq("projeto_id", projectId);
+  };
+
+  // --- NOVO: Lógica da Coluna Mestra ---
+  const handleToggleColumn = async (priority: string, isActive: boolean) => {
+    if (!currentSim) return toast.info("Crie um cenário primeiro.");
+
+    // 1. Identificar projetos da coluna
+    const projectsInColumn = projects.filter((p) => p.prioridade === priority);
+    const idsInColumn = projectsInColumn.map((p) => p.id);
+
+    if (idsInColumn.length === 0) return;
+
+    // 2. Atualizar UI
+    setActiveProjectIds((prev) => {
+      if (isActive) {
+        return Array.from(new Set([...prev, ...idsInColumn]));
+      } else {
+        return prev.filter((id) => !idsInColumn.includes(id));
+      }
+    });
+
+    // 3. Atualizar Banco
+    try {
+      if (isActive) {
+        // Limpa antes para garantir não duplicar erro
+        await supabase
+          .from("simulacao_projetos")
+          .delete()
+          .eq("simulacao_id", currentSim.id)
+          .in("projeto_id", idsInColumn);
+
+        const linksToCreate = idsInColumn.map((id) => ({
+          simulacao_id: currentSim!.id,
+          projeto_id: id,
+          ativo: true,
+        }));
+
+        const { error } = await supabase
+          .from("simulacao_projetos")
+          .insert(linksToCreate);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("simulacao_projetos")
+          .delete()
+          .eq("simulacao_id", currentSim.id)
+          .in("projeto_id", idsInColumn);
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao sincronizar seleção.");
+    }
   };
 
   const handleDeleteProject = async (id: number) => {
@@ -277,7 +327,6 @@ export function Dashboard() {
               Cenário: <strong>{currentSim?.titulo || "Novo Cenário"}</strong>
             </p>
 
-            {/* Feedback de Idade */}
             {idadeCalculada ? (
               <span
                 style={{
@@ -316,6 +365,7 @@ export function Dashboard() {
             ages={ages}
             years={years}
             dataProjected={dataProjected}
+            dataWithProjects={dataWithProjects} // <--- Passando a linha real
           />
         </div>
         <div>
@@ -348,6 +398,7 @@ export function Dashboard() {
           }}
           onDeleteProject={handleDeleteProject}
           onToggleProject={handleToggleProject}
+          onToggleColumn={handleToggleColumn} // <--- Passando a função da coluna mestra
         />
       </div>
 

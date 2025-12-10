@@ -1,5 +1,3 @@
-// src/components/meusProjetos/MeusProjetos.tsx
-
 import styles from "./MeusProjetos.module.css";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectColumn } from "./ProjectColumn";
@@ -7,29 +5,31 @@ import type { Projeto } from "../../types/database";
 
 type MeusProjetosProps = {
   projects: Projeto[];
-  activeProjectIds: number[]; // NOVA PROP: Lista de IDs que estão na simulação
+  activeProjectIds: number[];
   onAddClick: () => void;
   onEditProject: (project: Projeto) => void;
   onDeleteProject: (id: number) => void;
-  onToggleProject: (id: number, isActive: boolean) => void; // NOVA PROP
+  onToggleProject: (id: number, isActive: boolean) => void;
+  // NOVA PROP
+  onToggleColumn: (priority: string, isActive: boolean) => void;
 };
 
 export function MeusProjetos({
   projects,
-  activeProjectIds, // Recebendo a lista de ativos
+  activeProjectIds,
   onAddClick,
   onEditProject,
   onDeleteProject,
   onToggleProject,
+  onToggleColumn, // <--- Recebendo a função
 }: MeusProjetosProps) {
   const getProjectsByPriority = (priority: string) => {
     return projects.filter((p) => p.prioridade === priority);
   };
 
-  // Calcula total APENAS dos ativos
   const getTotalByPriority = (priority: string) => {
     const total = getProjectsByPriority(priority)
-      .filter((p) => activeProjectIds.includes(p.id)) // Filtra só os ativos
+      .filter((p) => activeProjectIds.includes(p.id))
       .reduce((acc, curr) => acc + curr.valor, 0);
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -37,21 +37,40 @@ export function MeusProjetos({
     }).format(total);
   };
 
-  const renderColumnContent = (priority: string) => {
-    return getProjectsByPriority(priority).map((project) => (
-      <ProjectCard
-        key={project.id}
-        title={project.nome}
-        value={project.valor}
-        details={project.prazo}
-        // Verifica se este projeto está na lista de ativos
-        isChecked={activeProjectIds.includes(project.id)}
-        // Chama a função de toggle
-        onToggle={(checked) => onToggleProject(project.id, checked)}
-        onEdit={() => onEditProject(project)}
-        onDelete={() => onDeleteProject(project.id)}
-      />
-    ));
+  // Verifica se TODOS os projetos desta prioridade estão ativos
+  const isColumnActive = (priority: string) => {
+    const columnProjects = getProjectsByPriority(priority);
+    if (columnProjects.length === 0) return false;
+    // Retorna true se TODOS os IDs da coluna estiverem na lista activeProjectIds
+    return columnProjects.every((p) => activeProjectIds.includes(p.id));
+  };
+
+  const renderColumn = (priority: string, label: string) => {
+    const columnProjects = getProjectsByPriority(priority);
+
+    return (
+      <ProjectColumn
+        title={label}
+        totalValue={getTotalByPriority(priority)}
+        // O Switch Mestre fica ligado se todos os itens estiverem ligados
+        isChecked={isColumnActive(priority)}
+        // Ao clicar no mestre, chama a função em lote
+        onToggle={(checked) => onToggleColumn(priority, checked)}
+      >
+        {columnProjects.map((project) => (
+          <ProjectCard
+            key={project.id}
+            title={project.nome}
+            value={project.valor}
+            details={project.prazo}
+            isChecked={activeProjectIds.includes(project.id)}
+            onToggle={(checked) => onToggleProject(project.id, checked)}
+            onEdit={() => onEditProject(project)}
+            onDelete={() => onDeleteProject(project.id)}
+          />
+        ))}
+      </ProjectColumn>
+    );
   };
 
   return (
@@ -59,26 +78,14 @@ export function MeusProjetos({
       <div className={styles.header}>
         <h3>Meus projetos (Biblioteca)</h3>
         <button onClick={onAddClick} className={styles.addButton}>
-          {" "}
-          +{" "}
+          +
         </button>
       </div>
 
       <div className={styles.projectsGrid}>
-        <ProjectColumn
-          title="Essencial"
-          totalValue={getTotalByPriority("essencial")}
-        >
-          {renderColumnContent("essencial")}
-        </ProjectColumn>
-
-        <ProjectColumn title="Desejo" totalValue={getTotalByPriority("desejo")}>
-          {renderColumnContent("desejo")}
-        </ProjectColumn>
-
-        <ProjectColumn title="Sonho" totalValue={getTotalByPriority("sonho")}>
-          {renderColumnContent("sonho")}
-        </ProjectColumn>
+        {renderColumn("essencial", "Essencial")}
+        {renderColumn("desejo", "Desejo")}
+        {renderColumn("sonho", "Sonho")}
       </div>
     </div>
   );

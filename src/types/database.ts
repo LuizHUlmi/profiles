@@ -17,6 +17,7 @@ export interface Projeto {
   valor: number;
   prazo: string;
   tipo?: string;
+  idade_realizacao?: number;
 }
 
 // --- SIMULAÇÃO (O Cenário) ---

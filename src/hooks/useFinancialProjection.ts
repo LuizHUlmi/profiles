@@ -8,67 +8,123 @@ type ProjectionParams = {
   rendaDesejada: number;
   outrasRendas: number;
   investimentoMensal: number;
+  expectativaVida?: number;
   projects?: Projeto[];
   activeProjectIds?: number[];
 };
 
 export function useFinancialProjection({
-  idadeAtual = 38, // Valor padrão ou vindo de props
+  idadeAtual = 30,
   patrimonioAtual,
   idadeAposentadoria,
   rendaDesejada,
   outrasRendas,
   investimentoMensal,
+  expectativaVida = 90,
   projects = [],
   activeProjectIds = [],
 }: ProjectionParams) {
   const projectionData = useMemo(() => {
-    const idadeFinal = 100;
+    // 1. Definições de Tempo
+    const hoje = new Date();
+    // Normaliza para dia 1 para evitar problemas de meses curtos
+    const dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+
+    const idadeFinal = Math.max(expectativaVida, idadeAtual + 5);
     const anosParaSimular = idadeFinal - idadeAtual;
-    const taxaJurosAnual = 0.06; // 6% ao ano
+    const totalMeses = anosParaSimular * 12;
+
+    // 2. Taxas
+    const taxaJurosAnual = 0.06;
     const taxaJurosMensal = Math.pow(1 + taxaJurosAnual, 1 / 12) - 1;
 
-    // TODO: No futuro, podemos descontar o valor dos projetos no fluxo de caixa
-    // const activeProjects = projects.filter((p) => activeProjectIds.includes(p.id));
-
+    // 3. Arrays de Dados
     const labelsAge: number[] = [];
     const labelsYear: string[] = [];
     const saldoProjetado: number[] = [];
-    let saldo = patrimonioAtual;
+    const saldoComProjetosProjetado: number[] = [];
 
-    for (let ano = 0; ano <= anosParaSimular; ano++) {
-      const idadeNoAno = idadeAtual + ano;
-      const anoCalendario = new Date().getFullYear() + ano;
+    let saldoBase = patrimonioAtual;
+    let saldoReal = patrimonioAtual;
 
-      for (let mes = 0; mes < 12; mes++) {
-        // 1. Aplica rendimento
-        saldo = saldo * (1 + taxaJurosMensal);
+    const monthNames = [
+      "Jan",
+      "Fev",
+      "Mar",
+      "Abr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Set",
+      "Out",
+      "Nov",
+      "Dez",
+    ];
 
-        // 2. Aplica fluxo de caixa (Aporte ou Retirada)
-        if (idadeNoAno < idadeAposentadoria) {
-          saldo += investimentoMensal;
-        } else {
-          // Na aposentadoria, subtraímos a necessidade de renda (descontando o que já tem de outras fontes)
-          const necessidadeDeRetirada = Math.max(
-            0,
-            rendaDesejada - outrasRendas
-          );
-          saldo -= necessidadeDeRetirada;
-        }
+    // Filtra apenas projetos ativos
+    const projetosAtivos = projects.filter((p) =>
+      activeProjectIds.includes(p.id)
+    );
 
-        // Evita saldo negativo visualmente feio no gráfico (opcional)
-        if (saldo < 0) saldo = 0;
+    // --- LOOP MENSAL ---
+    for (let i = 0; i <= totalMeses; i++) {
+      const dataPonto = new Date(
+        dataInicial.getFullYear(),
+        dataInicial.getMonth() + i,
+        1
+      );
+      const mes = dataPonto.getMonth(); // 0-11
+      const ano = dataPonto.getFullYear();
 
-        labelsAge.push(idadeNoAno);
-        labelsYear.push(`Jan/${anoCalendario}`); // Simplificação
-        saldoProjetado.push(Math.round(saldo));
+      const idadeNoPonto = idadeAtual + Math.floor(i / 12);
+
+      // A. Rendimento (Juros Compostos)
+      saldoBase = saldoBase * (1 + taxaJurosMensal);
+      saldoReal = saldoReal * (1 + taxaJurosMensal);
+
+      // B. Aporte / Retirada (Fluxo de Vida)
+      if (idadeNoPonto < idadeAposentadoria) {
+        saldoBase += investimentoMensal;
+        saldoReal += investimentoMensal;
+      } else {
+        const retirada = Math.max(0, rendaDesejada - outrasRendas);
+        saldoBase -= retirada;
+        saldoReal -= retirada;
       }
+
+      // C. Projetos (Custo de Oportunidade)
+      projetosAtivos.forEach((projeto) => {
+        // Se não tiver idade definida, assume que é AGORA (idadeAtual)
+        const idadeAlvo = projeto.idade_realizacao ?? idadeAtual;
+
+        const ehAnoDoProjeto = idadeNoPonto === idadeAlvo;
+        const ehJaneiro = mes === 0;
+
+        // Desconta se for o início da simulação (agora) OU se for janeiro do ano alvo futuro
+        const deveDescontarAgora =
+          (i === 0 && ehAnoDoProjeto) || (i > 0 && ehAnoDoProjeto && ehJaneiro);
+
+        if (deveDescontarAgora) {
+          saldoReal -= projeto.valor;
+        }
+      });
+
+      // Travas visuais de zero (opcional, para gráfico não ficar negativo)
+      if (saldoBase < 0) saldoBase = 0;
+      if (saldoReal < 0) saldoReal = 0;
+
+      labelsAge.push(idadeNoPonto);
+      labelsYear.push(`${monthNames[mes]}/${ano}`);
+      saldoProjetado.push(Math.round(saldoBase));
+      saldoComProjetosProjetado.push(Math.round(saldoReal));
     }
 
     return {
       ages: labelsAge,
       years: labelsYear,
-      dataProjected: saldoProjetado,
+      dataProjected: saldoProjetado, // Linha Azul (Referência)
+      dataWithProjects: saldoComProjetosProjetado, // Linha Laranja (Real)
     };
   }, [
     idadeAtual,
@@ -77,6 +133,7 @@ export function useFinancialProjection({
     rendaDesejada,
     outrasRendas,
     investimentoMensal,
+    expectativaVida,
     projects,
     activeProjectIds,
   ]);

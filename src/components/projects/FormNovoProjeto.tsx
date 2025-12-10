@@ -1,8 +1,5 @@
-// src/components/projects/ProjectForm.tsx   FormNovoProjeto
+// src/components/projects/FormNovoProjeto.tsx
 
-// src/components/projects/ProjectForm.tsx
-
-// ... (imports permanecem iguais)
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
@@ -11,7 +8,6 @@ import { Input } from "../ui/input/input";
 import { Button } from "../ui/button/Button";
 import { maskCurrency, unmaskCurrency } from "../../utils/masks";
 import type { Projeto } from "../../types/database";
-// ... imports de ícones (Lucide) ...
 import {
   Plane,
   Car,
@@ -31,7 +27,7 @@ type FormNovoProjetoProps = {
   onClose: () => void;
   onSuccess: () => void;
   projectToEdit?: Projeto | null;
-  ownerId: string; // <--- NOVO: ID do dono do projeto (obrigatório)
+  ownerId: string;
 };
 
 type ProjectFormData = {
@@ -42,22 +38,27 @@ type ProjectFormData = {
   prazo: string;
   repeticao: string;
   qtdRepeticoes: string;
+  idade_realizacao: string; // Vem como string do input
 };
 
 export function FormNovoProjeto({
   onClose,
   onSuccess,
   projectToEdit,
-  ownerId, // <--- Recebendo a prop
+  ownerId,
 }: FormNovoProjetoProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const defaultValues = {
     prioridade: projectToEdit?.prioridade || "essencial",
-    tipo: "Outro",
+    tipo: projectToEdit?.tipo || "Outro",
     prazo: "nao",
     valor: projectToEdit ? maskCurrency(String(projectToEdit.valor * 100)) : "",
     nome: projectToEdit?.nome || "",
+    // Carrega o valor existente se houver
+    idade_realizacao: projectToEdit?.idade_realizacao
+      ? String(projectToEdit.idade_realizacao)
+      : "",
   };
 
   const { register, handleSubmit, watch } = useForm<ProjectFormData>({
@@ -67,7 +68,6 @@ export function FormNovoProjeto({
   const selectedPrioridade = watch("prioridade");
   const selectedTipo = watch("tipo");
 
-  // ... (Lista de projectTypes permanece igual) ...
   const projectTypes = [
     { icon: Plane, label: "Viagem" },
     { icon: Car, label: "Veículo" },
@@ -89,6 +89,11 @@ export function FormNovoProjeto({
     try {
       const valorNumerico = unmaskCurrency(data.valor);
 
+      // Converte a string para número (ou null se vazio)
+      const idadeRealizacaoNum = data.idade_realizacao
+        ? parseInt(data.idade_realizacao)
+        : null;
+
       const payload = {
         nome: data.nome,
         prioridade: data.prioridade,
@@ -98,7 +103,8 @@ export function FormNovoProjeto({
           data.prazo === "sim"
             ? `${data.repeticao} - ${data.qtdRepeticoes}x`
             : "À vista",
-        perfil_id: ownerId, // <--- O PULO DO GATO: Vincula o projeto ao dono!
+        perfil_id: ownerId,
+        idade_realizacao: idadeRealizacaoNum, // Salva no banco
       };
 
       if (projectToEdit) {
@@ -123,11 +129,8 @@ export function FormNovoProjeto({
     }
   };
 
-  // ... (O return do JSX permanece igual, apenas usando as props novas) ...
   return (
     <form className={styles.formContainer} onSubmit={handleSubmit(onSubmit)}>
-      {/* ... resto do formulário igual ... */}
-
       <h3 style={{ marginTop: 0 }}>
         {projectToEdit ? "Editar Projeto" : "Novo Projeto"}
       </h3>
@@ -181,6 +184,16 @@ export function FormNovoProjeto({
               required: true,
               onChange: (e) => (e.target.value = maskCurrency(e.target.value)),
             })}
+          />
+        </div>
+
+        {/* --- CAMPO NOVO AQUI --- */}
+        <div>
+          <Input
+            label="Idade de Realização"
+            type="number"
+            placeholder="Ex: 45"
+            {...register("idade_realizacao")}
           />
         </div>
       </div>

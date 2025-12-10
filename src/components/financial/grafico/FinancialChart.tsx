@@ -1,25 +1,26 @@
-// src/components/financial/FinancialChart.tsx
+// src/components/financial/grafico/FinancialChart.tsx
 
 import ReactECharts from "echarts-for-react";
 
 type FinancialChartProps = {
   ages: number[];
   years: (string | number)[];
-  dataProjected: number[];
+  dataProjected: number[]; // Cenário Base (Sem projetos)
+  dataWithProjects?: number[]; // Cenário Real (Com projetos) <--- NOVO
 };
 
 export function FinancialChart({
   ages,
   years,
   dataProjected,
+  dataWithProjects,
 }: FinancialChartProps) {
-  // Cores alinhadas com o index.css (Design System)
   const colors = {
-    primary: "#007bff", // var(--primary)
-    primaryLight: "rgba(0, 123, 255, 0.2)",
-    text: "#333333", // var(--text-primary)
-    textLight: "#666666", // var(--text-secondary)
-    grid: "#e0e0e0", // var(--border-color)
+    primary: "#007bff", // Azul (Base)
+    secondary: "#f97316", // Laranja (Real/Com Projetos)
+    text: "#333333",
+    textLight: "#666666",
+    grid: "#e0e0e0",
   };
 
   const options = {
@@ -42,31 +43,27 @@ export function FinancialChart({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       formatter: function (params: any[]) {
         const index = params[0].dataIndex;
-        // Cabeçalho do Tooltip
         let result = `<div style="margin-bottom: 8px; font-weight: 600; color: ${colors.textLight}">
                         ${params[0].axisValue} <span style="font-weight:normal">(${ages[index]} anos)</span>
                       </div>`;
 
-        // Itens do Tooltip
         params.forEach((item) => {
+          // Formata valor monetário
+          const val = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(item.value);
+
           result += `<div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; font-size: 14px;">
             <div style="display:flex; align-items:center; gap: 6px;">
-                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background-color:${
-                  item.color
-                };"></span>
+                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background-color:${item.color};"></span>
                 <span>${item.seriesName}</span>
             </div>
-            <span style="font-weight: 700;">${new Intl.NumberFormat("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            }).format(item.value)}</span>
+            <span style="font-weight: 700;">${val}</span>
           </div>`;
         });
         return result;
       },
-      padding: [12, 16],
-      extraCssText:
-        "box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); border-radius: 8px;",
     },
     grid: {
       left: "0",
@@ -80,7 +77,7 @@ export function FinancialChart({
       boundaryGap: false,
       data: years,
       axisLabel: {
-        interval: 59, // Mostra a cada 5 anos (12 meses * 5 - 1)
+        interval: 59,
         formatter: (value: string, index: number) => {
           const ano = value.split("/")[1];
           return `${ano}\n${ages[index]} anos`;
@@ -110,30 +107,49 @@ export function FinancialChart({
       },
     },
     series: [
+      // SÉRIE 1: BASE (Azul) - Tracejada se tiver projetos, Sólida se não tiver
       {
-        name: "Patrimônio Total",
+        name: "Cenário Base (Sem Projetos)",
         type: "line",
         smooth: 0.3,
         showSymbol: false,
         lineStyle: {
           color: colors.primary,
-          width: 3,
-        },
-        areaStyle: {
-          color: {
-            type: "linear",
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: colors.primaryLight },
-              { offset: 1, color: "rgba(0, 123, 255, 0)" },
-            ],
-          },
+          width: 2,
+          type: dataWithProjects ? "dashed" : "solid", // Fica tracejada para comparar
+          opacity: 0.6,
         },
         data: dataProjected,
       },
+      // SÉRIE 2: REAL (Laranja) - Só aparece se houver dados
+      ...(dataWithProjects
+        ? [
+            {
+              name: "Cenário Real (Com Projetos)",
+              type: "line",
+              smooth: 0.3,
+              showSymbol: false,
+              lineStyle: {
+                color: colors.secondary,
+                width: 3,
+              },
+              areaStyle: {
+                color: {
+                  type: "linear",
+                  x: 0,
+                  y: 0,
+                  x2: 0,
+                  y2: 1,
+                  colorStops: [
+                    { offset: 0, color: "rgba(249, 115, 22, 0.2)" }, // Laranja claro
+                    { offset: 1, color: "rgba(249, 115, 22, 0)" },
+                  ],
+                },
+              },
+              data: dataWithProjects,
+            },
+          ]
+        : []),
     ],
   };
 
