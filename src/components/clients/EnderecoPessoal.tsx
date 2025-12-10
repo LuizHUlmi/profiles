@@ -1,7 +1,7 @@
 // src/components/dados/DadosPessoaisCard.tsx
 
 import { Input } from "../ui/input/input";
-import styles from "../../components/form/DadosPessoaisCard.module.css"; // Usa os mesmos estilos de layout
+import styles from "../../components/clients/EnderecoPessoal.module.css"; // Usa os mesmos estilos de layout
 
 type EnderecoPessoalProps = {
   title: string;

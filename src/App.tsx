@@ -6,44 +6,68 @@ import { Dashboard } from "./pages/Dashboard";
 import { Equipe } from "./pages/Equipe";
 import { Login } from "./pages/Login";
 import { Clientes } from "./pages/Clientes";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { Spinner } from "./components/ui/spinner/Spinner"; // <--- Import novo
-
-// Componente "Porteiro" atualizado
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  // Ajustei o tipo para React.ReactNode (mais genérico)
-  const { session, loading } = useAuth();
-
-  if (loading) {
-    // Agora mostramos o Spinner de tela cheia enquanto verifica o login
-    return <Spinner fullScreen />;
-  }
-
-  if (!session) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>; // Fragmento para garantir tipo correto
-}
+import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./components/ui/toast/ToastContext";
+import { RoleGuard } from "./context/RoleGuard";
 
 function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<Login />} />
+      <ToastProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
 
-        <Route
-          element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/cliente" element={<Clientes />} />
-          <Route path="/equipe" element={<Equipe />} />
-        </Route>
-      </Routes>
+          <Route element={<MainLayout />}>
+            {/* Rota Padrão (Para o Cliente ver o próprio) */}
+            <Route
+              path="/"
+              element={
+                <RoleGuard
+                  allowedRoles={[
+                    "master",
+                    "consultor",
+                    "cliente_leitor",
+                    "cliente_editor",
+                  ]}
+                >
+                  <Dashboard />
+                </RoleGuard>
+              }
+            />
+
+            {/* NOVA ROTA: Dashboard Visualizando um Cliente Específico */}
+            <Route
+              path="/dashboard/:userId"
+              element={
+                <RoleGuard allowedRoles={["master", "consultor"]}>
+                  <Dashboard />
+                </RoleGuard>
+              }
+            />
+
+            {/* ... rotas de clientes e equipe ... */}
+            <Route
+              path="/cliente"
+              element={
+                <RoleGuard allowedRoles={["master", "consultor"]}>
+                  <Clientes />
+                </RoleGuard>
+              }
+            />
+
+            <Route
+              path="/equipe"
+              element={
+                <RoleGuard allowedRoles={["master"]}>
+                  <Equipe />
+                </RoleGuard>
+              }
+            />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ToastProvider>
     </AuthProvider>
   );
 }

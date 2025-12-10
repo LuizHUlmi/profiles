@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DadosPessoaisCard } from "../components/clients/DadosPessoaisCard"; // Novo import
 import styles from "./perfil.module.css"; // Seus estilos de layout
-import { EnderecoPssoal } from "../components/clients/EnderecoPessoal";
+import { EnderecoPessoal } from "../components/clients/EnderecoPessoal";
 
 export function Perfil() {
   // 1. Estado para controlar a exibição do formulário do cônjuge
@@ -43,7 +43,7 @@ export function Perfil() {
       )}
 
       <div>
-        <EnderecoPssoal title="Endereço" />
+        <EnderecoPessoal title="Endereço" />
       </div>
     </div>
   );

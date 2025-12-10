@@ -11,7 +11,7 @@ type FormNovoClienteProps = {
   onSuccess: () => void;
 };
 
-export function ClientForm({ onClose, onSuccess }: FormNovoClienteProps) {
+export function FormNovoCliente({ onClose, onSuccess }: FormNovoClienteProps) {
   const { profile } = useAuth();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");

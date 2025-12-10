@@ -1,19 +1,26 @@
 // src/components/layout/MainLayout.tsx
 
 import { Outlet } from "react-router-dom";
-import { Sidebar } from "../sidebar/Sidebar"; // 1. Importe a nova Sidebar
-import styles from "./MainLayout.module.css"; // 2. Vamos usar um CSS para o layout
+import { Sidebar } from "../sidebar/Sidebar";
+import { Navbar } from "../navbar/Navbar"; // <--- Import Atualizado
+import styles from "./MainLayout.module.css";
 
 export function MainLayout() {
   return (
     <div className={styles.layout}>
-      {/* 3. Renderize a Sidebar */}
+      {/* Sidebar Fixa à Esquerda */}
       <Sidebar />
 
-      {/* 4. Área de conteúdo principal */}
-      <main className={styles.content}>
-        <Outlet />
-      </main>
+      {/* Área Principal (Conteúdo + Navbar) */}
+      <div className={styles.contentWrapper}>
+        {/* Navbar Fixa no Topo */}
+        <Navbar />
+
+        {/* Conteúdo da Página que rola */}
+        <main className={styles.content}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ interface ConsultorFormProps {
   onSuccess?: () => void;
 }
 
-export function ConsultantForm({ onClose, onSuccess }: ConsultorFormProps) {
+export function ConsultorForm({ onClose, onSuccess }: ConsultorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,

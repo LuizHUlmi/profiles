@@ -1,75 +1,52 @@
 // src/pages/Clientes.tsx
 
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
-import { useAuth } from "..//context/AuthContext"; // Importante para saber quem é o consultor
-import { FormNovoCliente } from "../components/clients/FormNovoCliente";
-import { Modal } from "../components/ui/modal/Modal"; // Ajustei o caminho conforme nossos passos anteriores
-import { UserPlus, Trash2, UserCheck, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useClients } from "../hooks/useClients"; // <--- Hook Novo
 
-// Tipo para a listagem de Clientes
-type Cliente = {
-  id: string;
-  nome: string;
-  email: string;
-  user_id: string | null; // Se tiver ID, já criou conta. Se null, é pendente.
-};
+// Componentes UI
+import { FormNovoCliente } from "../components/clients/FormNovoCliente";
+import { Modal } from "../components/ui/modal/Modal";
+import { Button } from "../components/ui/button/Button";
+
+// Ícones e Estilos
+import {
+  UserPlus,
+  Trash2,
+  UserCheck,
+  Clock,
+  LayoutDashboard,
+} from "lucide-react";
 
 export function Clientes() {
-  const { profile } = useAuth(); // Pegamos o perfil do Consultor logado
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+
+  // Lógica extraída para o Hook
+  const { clientes, loading, fetchClientes, deleteCliente } = useClients();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Função para buscar os clientes DESTE consultor
-  const fetchClientes = async () => {
-    // Só busca se tivermos o perfil do consultor carregado
-    if (!profile) return;
+  // Carrega lista ao entrar
+  useEffect(() => {
+    if (profile) fetchClientes(profile.id);
+  }, [profile, fetchClientes]);
 
-    setIsLoading(true);
-
-    const { data, error } = await supabase
-      .from("perfis")
-      .select("id, nome, email, user_id")
-      .eq("consultor_id", profile.id) // O FILTRO MÁGICO: Só meus clientes
-      .order("nome");
-
-    if (error) {
-      console.error("Erro ao buscar clientes:", error);
-    } else {
-      setClientes(data || []);
-    }
-    setIsLoading(false);
+  // Handlers simplificados
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza? Isso apagará todos os dados deste cliente."))
+      return;
+    await deleteCliente(id);
   };
 
-  // Carrega ao abrir a página ou quando o perfil carregar
-  useEffect(() => {
-    fetchClientes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile]);
-
-  // Função para deletar cliente
-  const handleDelete = async (id: string) => {
-    if (
-      !confirm(
-        "Tem certeza que deseja remover este cliente? Todos os dados dele serão apagados."
-      )
-    )
-      return;
-
-    const { error } = await supabase.from("perfis").delete().eq("id", id);
-
-    if (error) {
-      alert("Erro ao deletar cliente.");
-      console.error(error);
-    } else {
-      fetchClientes(); // Recarrega a lista
-    }
+  const handleSuccess = () => {
+    if (profile) fetchClientes(profile.id);
   };
 
   return (
     <div style={{ padding: "2rem" }}>
-      {/* Cabeçalho da Página */}
+      {/* Cabeçalho */}
       <div
         style={{
           display: "flex",
@@ -82,44 +59,33 @@ export function Clientes() {
           <h2
             style={{
               fontSize: "1.5rem",
-              fontWeight: "600",
-              color: "#333",
+              fontWeight: "700",
+              color: "var(--text-primary)",
               margin: 0,
             }}
           >
             Carteira de Clientes
           </h2>
-          <p style={{ color: "#666", marginTop: "0.5rem" }}>
-            Gerencie seus clientes e acompanhe o status de cadastro.
+          <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem" }}>
+            Gerencie seus clientes e acesse as simulações.
           </p>
         </div>
 
-        <button
+        <Button
           onClick={() => setIsModalOpen(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
+          icon={<UserPlus size={18} />}
         >
-          <UserPlus size={20} />
           Novo Cliente
-        </button>
+        </Button>
       </div>
 
-      {/* Tabela de Listagem */}
+      {/* Tabela de Clientes */}
       <div
         style={{
-          backgroundColor: "white",
-          borderRadius: "8px",
-          border: "1px solid #e0e0e0",
+          backgroundColor: "var(--bg-card)",
+          borderRadius: "var(--radius-md)",
+          border: "1px solid var(--border-color)",
+          boxShadow: "var(--shadow-sm)",
           overflow: "hidden",
         }}
       >
@@ -132,37 +98,56 @@ export function Clientes() {
         >
           <thead
             style={{
-              backgroundColor: "#f9fafb",
-              borderBottom: "1px solid #e0e0e0",
+              backgroundColor: "var(--bg-page)",
+              borderBottom: "1px solid var(--border-color)",
             }}
           >
             <tr>
               <th
-                style={{ padding: "1rem", color: "#555", fontSize: "0.9rem" }}
+                style={{
+                  padding: "1rem",
+                  color: "var(--text-secondary)",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                }}
               >
                 Nome
               </th>
               <th
-                style={{ padding: "1rem", color: "#555", fontSize: "0.9rem" }}
+                style={{
+                  padding: "1rem",
+                  color: "var(--text-secondary)",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                }}
               >
                 E-mail
               </th>
               <th
-                style={{ padding: "1rem", color: "#555", fontSize: "0.9rem" }}
+                style={{
+                  padding: "1rem",
+                  color: "var(--text-secondary)",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                }}
               >
-                Situação
+                Status
               </th>
               <th style={{ padding: "1rem", textAlign: "right" }}>Ações</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
+            {loading ? (
               <tr>
                 <td
                   colSpan={4}
-                  style={{ padding: "2rem", textAlign: "center" }}
+                  style={{
+                    padding: "3rem",
+                    textAlign: "center",
+                    color: "var(--text-secondary)",
+                  }}
                 >
-                  Carregando...
+                  Carregando carteira...
                 </td>
               </tr>
             ) : clientes.length === 0 ? (
@@ -170,28 +155,38 @@ export function Clientes() {
                 <td
                   colSpan={4}
                   style={{
-                    padding: "2rem",
+                    padding: "3rem",
                     textAlign: "center",
-                    color: "#888",
+                    color: "var(--text-secondary)",
                   }}
                 >
-                  Você ainda não tem clientes na sua carteira.
+                  Nenhum cliente encontrado. Adicione o primeiro!
                 </td>
               </tr>
             ) : (
               clientes.map((cliente) => {
-                // Lógica visual do status
                 const isRegistered = !!cliente.user_id;
 
                 return (
                   <tr
                     key={cliente.id}
-                    style={{ borderBottom: "1px solid #eee" }}
+                    style={{ borderBottom: "1px solid var(--border-color)" }}
                   >
-                    <td style={{ padding: "1rem", fontWeight: 500 }}>
+                    <td
+                      style={{
+                        padding: "1rem",
+                        fontWeight: 500,
+                        color: "var(--text-primary)",
+                      }}
+                    >
                       {cliente.nome}
                     </td>
-                    <td style={{ padding: "1rem", color: "#666" }}>
+                    <td
+                      style={{
+                        padding: "1rem",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
                       {cliente.email}
                     </td>
                     <td style={{ padding: "1rem" }}>
@@ -199,13 +194,15 @@ export function Clientes() {
                         style={{
                           display: "inline-flex",
                           alignItems: "center",
-                          gap: "4px",
-                          padding: "4px 8px",
-                          borderRadius: "12px",
-                          fontSize: "0.85rem",
-                          // Verde se cadastrado, Amarelo se pendente
-                          backgroundColor: isRegistered ? "#dcfce7" : "#fef3c7",
-                          color: isRegistered ? "#166534" : "#92400e",
+                          gap: "6px",
+                          padding: "4px 10px",
+                          borderRadius: "20px",
+                          fontSize: "0.8rem",
+                          fontWeight: 500,
+                          backgroundColor: isRegistered
+                            ? "var(--success)"
+                            : "#fef3c7",
+                          color: isRegistered ? "#fff" : "#92400e",
                         }}
                       >
                         {isRegistered ? (
@@ -213,37 +210,58 @@ export function Clientes() {
                         ) : (
                           <Clock size={14} />
                         )}
-                        {isRegistered ? "Cadastrado" : "Pendente"}
+                        {isRegistered ? "Ativo" : "Pendente"}
                       </span>
                     </td>
                     <td style={{ padding: "1rem", textAlign: "right" }}>
-                      {/* Botão de Ver Perfil (Futuro) */}
-                      <button
+                      <div
                         style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "#007bff",
-                          marginRight: "10px",
-                          fontWeight: 500,
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
                         }}
-                        title="Ver dados do cliente"
                       >
-                        Ver Perfil
-                      </button>
+                        {/* Botão VER DASHBOARD (Aquele que criamos antes) */}
+                        <button
+                          onClick={() => navigate(`/dashboard/${cliente.id}`)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: "var(--primary)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            fontSize: "0.9rem",
+                            fontWeight: 600,
+                          }}
+                          title="Acessar Dashboard Financeiro"
+                        >
+                          <LayoutDashboard size={18} />
+                          Dashboard
+                        </button>
 
-                      <button
-                        onClick={() => handleDelete(cliente.id)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "#999",
-                        }}
-                        title="Remover cliente"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                        <button
+                          onClick={() => handleDelete(cliente.id)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: "var(--text-secondary)",
+                            transition: "color 0.2s",
+                          }}
+                          title="Remover cliente"
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.color = "var(--danger)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.color =
+                              "var(--text-secondary)")
+                          }
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -253,13 +271,11 @@ export function Clientes() {
         </table>
       </div>
 
-      {/* Modal de Cadastro */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        {/* Passamos o ID do consultor atual para vincular o cliente */}
         {profile && (
           <FormNovoCliente
             onClose={() => setIsModalOpen(false)}
-            onSuccess={fetchClientes}
+            onSuccess={handleSuccess}
           />
         )}
       </Modal>

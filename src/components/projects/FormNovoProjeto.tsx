@@ -1,14 +1,17 @@
+// src/components/projects/ProjectForm.tsx   FormNovoProjeto
+
 // src/components/projects/ProjectForm.tsx
 
+// ... (imports permanecem iguais)
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
 import styles from "./FormNovoProjeto.module.css";
 import { Input } from "../ui/input/input";
-import { Button } from "../ui/button/Button"; // <--- Novo Import
-import { maskCurrency, unmaskCurrency } from "../../utils/masks"; // Ajuste o path se necessário
+import { Button } from "../ui/button/Button";
+import { maskCurrency, unmaskCurrency } from "../../utils/masks";
 import type { Projeto } from "../../types/database";
-// ... (Mantenha seus imports de ícones: Plane, Car, etc) ...
+// ... imports de ícones (Lucide) ...
 import {
   Plane,
   Car,
@@ -28,6 +31,7 @@ type FormNovoProjetoProps = {
   onClose: () => void;
   onSuccess: () => void;
   projectToEdit?: Projeto | null;
+  ownerId: string; // <--- NOVO: ID do dono do projeto (obrigatório)
 };
 
 type ProjectFormData = {
@@ -40,10 +44,11 @@ type ProjectFormData = {
   qtdRepeticoes: string;
 };
 
-export function ProjectForm({
+export function FormNovoProjeto({
   onClose,
   onSuccess,
   projectToEdit,
+  ownerId, // <--- Recebendo a prop
 }: FormNovoProjetoProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,6 +67,7 @@ export function ProjectForm({
   const selectedPrioridade = watch("prioridade");
   const selectedTipo = watch("tipo");
 
+  // ... (Lista de projectTypes permanece igual) ...
   const projectTypes = [
     { icon: Plane, label: "Viagem" },
     { icon: Car, label: "Veículo" },
@@ -92,6 +98,7 @@ export function ProjectForm({
           data.prazo === "sim"
             ? `${data.repeticao} - ${data.qtdRepeticoes}x`
             : "À vista",
+        perfil_id: ownerId, // <--- O PULO DO GATO: Vincula o projeto ao dono!
       };
 
       if (projectToEdit) {
@@ -116,8 +123,11 @@ export function ProjectForm({
     }
   };
 
+  // ... (O return do JSX permanece igual, apenas usando as props novas) ...
   return (
     <form className={styles.formContainer} onSubmit={handleSubmit(onSubmit)}>
+      {/* ... resto do formulário igual ... */}
+
       <h3 style={{ marginTop: 0 }}>
         {projectToEdit ? "Editar Projeto" : "Novo Projeto"}
       </h3>
@@ -139,7 +149,7 @@ export function ProjectForm({
         </div>
       </div>
 
-      {/* Tipos (Ícones) */}
+      {/* Tipos */}
       <div className={styles.formSection}>
         <label>Tipo do projeto</label>
         <div className={styles.iconRadioGroup}>
@@ -175,7 +185,6 @@ export function ProjectForm({
         </div>
       </div>
 
-      {/* RODAPÉ COM NOVOS BOTÕES */}
       <div className={styles.formFooter}>
         <Button
           type="button"

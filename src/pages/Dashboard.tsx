@@ -1,43 +1,55 @@
+// src/pages/Dashboard.tsx
+
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useFinancialProjection } from "../hooks/useFinancialProjection";
+import { useProjects } from "../hooks/useProjects"; // <--- Hook novo
+import { useToast } from "../components/ui/toast/ToastContext";
+import { useParams } from "react-router-dom"; // <--- Importante: Para ler a URL
 
-// Componentes
-
+// Componentes UI e Features
+import { FinancialChart } from "../components/financial/grafico/FinancialChart";
 import { MeusProjetos } from "../components/projects/MeusProjetos";
+
 import { SimulacaoControls } from "../components/financial/grafico/SimulationControls";
 import { Modal } from "../components/ui/modal/Modal";
 import { FormNovoProjeto } from "../components/projects/FormNovoProjeto";
 
-// Tipos e Estilos
 import type { Projeto, Simulacao } from "../types/database";
 import styles from "./Dashboard.module.css";
-import { FinancialChart } from "../components/financial/grafico/FinancialChart";
 
 export function Dashboard() {
   const { profile } = useAuth();
+  const { userId } = useParams(); // <--- Pega o ID da URL se existir
+  const toast = useToast();
 
-  // --- Estados de Controle de UI ---
+  // DECISÃO DO ALVO:
+  // Se tem userId na URL, usamos ele. Se não, usamos o ID do perfil logado.
+  const targetProfileId = userId || profile?.id;
+
+  // --- Hooks de Dados ---
+  const { projects, fetchProjects, deleteProject } = useProjects();
+
+  // --- Estados UI ---
   const [modalView, setModalView] = useState<"add" | "edit" | null>(null);
   const [projectToEdit, setProjectToEdit] = useState<Projeto | null>(null);
   const [isSavingSim, setIsSavingSim] = useState(false);
 
-  // --- Estados de Dados do Negócio ---
-  const [projects, setProjects] = useState<Projeto[]>([]);
+  // --- Estados Negócio ---
   const [currentSim, setCurrentSim] = useState<Simulacao | null>(null);
   const [activeProjectIds, setActiveProjectIds] = useState<number[]>([]);
 
-  // --- Estados da Simulação (Sliders) ---
-  const [patrimonioAtual] = useState(50000); // Poderia vir do perfil
-  const [idadeAtual] = useState(38); // Poderia vir do perfil
+  // Sliders
+  const [idadeAtual] = useState(38);
+  const [patrimonioAtual] = useState(50000);
 
   const [idadeAposentadoria, setIdadeAposentadoria] = useState(65);
   const [rendaDesejada, setRendaDesejada] = useState(15000);
   const [outrasRendas, setOutrasRendas] = useState(2500);
   const [investimentoMensal, setInvestimentoMensal] = useState(2000);
 
-  // --- Hook de Projeção (A Lógica Matemática extraída) ---
+  // --- Projeção ---
   const { ages, years, dataProjected } = useFinancialProjection({
     idadeAtual,
     patrimonioAtual,
@@ -49,44 +61,32 @@ export function Dashboard() {
     activeProjectIds,
   });
 
-  // --- Efeitos e Carregamento ---
+  // --- Carregamento ---
   useEffect(() => {
-    if (profile) loadDashboardData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile]);
+    // Só carrega se tivermos um alvo definido
+    if (targetProfileId) {
+      loadSimulationData(targetProfileId);
+      fetchProjects(targetProfileId);
+    }
+  }, [targetProfileId, fetchProjects]);
 
-  const loadDashboardData = async () => {
-    if (!profile) return;
-
-    // 1. Busca Simulação Ativa
+  const loadSimulationData = async (id: string) => {
+    // Busca Simulação do ALVO (não necessariamente do logado)
     const { data: simData } = await supabase
       .from("simulacoes")
       .select("*")
-      .eq("perfil_id", profile.id)
+      .eq("perfil_id", id)
       .eq("ativo", true)
       .order("created_at", { ascending: false })
       .maybeSingle();
 
     if (simData) {
       setCurrentSim(simData);
-      // Atualiza sliders com dados do banco
       setIdadeAposentadoria(simData.idade_aposentadoria);
       setRendaDesejada(simData.renda_desejada);
       setOutrasRendas(simData.outras_rendas);
       setInvestimentoMensal(simData.investimento_mensal);
-    }
 
-    // 2. Busca Projetos
-    const { data: projData } = await supabase
-      .from("projetos")
-      .select("*")
-      .order("id", { ascending: true });
-    // Nota: Idealmente filtrar por .eq('perfil_id', profile.id) se a tabela tiver essa coluna
-
-    setProjects(projData || []);
-
-    // 3. Busca Vínculos
-    if (simData) {
       const { data: links } = await supabase
         .from("simulacao_projetos")
         .select("projeto_id")
@@ -95,23 +95,24 @@ export function Dashboard() {
       if (links) {
         setActiveProjectIds(links.map((l) => l.projeto_id));
       }
+    } else {
+      // Reseta se não tiver simulação (importante ao trocar de cliente)
+      setCurrentSim(null);
+      setActiveProjectIds([]);
     }
   };
 
-  // --- Handlers de Ação ---
+  // --- Handlers ---
 
   const handleToggleProject = async (projectId: number, isActive: boolean) => {
     if (!currentSim) {
-      alert("Salve a simulação primeiro para vincular projetos.");
+      toast.info("Salve a simulação primeiro para vincular projetos.");
       return;
     }
-
-    // Otimistic Update
     setActiveProjectIds((prev) =>
       isActive ? [...prev, projectId] : prev.filter((id) => id !== projectId)
     );
 
-    // Banco
     if (isActive) {
       await supabase.from("simulacao_projetos").insert({
         simulacao_id: currentSim.id,
@@ -127,12 +128,12 @@ export function Dashboard() {
   };
 
   const handleSaveSimulation = async () => {
-    if (!profile) return;
+    if (!targetProfileId) return;
     setIsSavingSim(true);
 
     try {
       const simPayload = {
-        perfil_id: profile.id,
+        perfil_id: targetProfileId, // <--- Salva para o CLIENTE ALVO
         titulo: "Cenário Principal",
         idade_aposentadoria: idadeAposentadoria,
         renda_desejada: rendaDesejada,
@@ -147,6 +148,7 @@ export function Dashboard() {
           .from("simulacoes")
           .update(simPayload)
           .eq("id", currentSim.id);
+        toast.success("Simulação atualizada!");
       } else {
         const { data } = await supabase
           .from("simulacoes")
@@ -154,28 +156,49 @@ export function Dashboard() {
           .select()
           .single();
         if (data) setCurrentSim(data);
+        toast.success("Simulação criada!");
+        loadSimulationData(targetProfileId);
       }
-      alert("Simulação salva com sucesso!");
-      if (!currentSim) loadDashboardData(); // Recarrega se for nova
     } catch (error) {
       console.error(error);
-      alert("Erro ao salvar simulação.");
+      toast.error("Erro ao salvar.");
     } finally {
       setIsSavingSim(false);
     }
   };
 
   const handleDeleteProject = async (id: number) => {
-    if (!confirm("Tem certeza que deseja excluir?")) return;
-    const { error } = await supabase.from("projetos").delete().eq("id", id);
-    if (!error) loadDashboardData();
+    if (!confirm("Tem certeza que deseja excluir este projeto?")) return;
+    await deleteProject(id);
   };
 
-  // --- Renderização ---
+  const handleSuccessForm = () => {
+    if (targetProfileId) fetchProjects(targetProfileId);
+  };
+
+  // Se não tiver ID nenhum (ex: erro de carregamento), mostra aviso
+  if (!targetProfileId)
+    return <div style={{ padding: 20 }}>Carregando perfil...</div>;
+
   return (
     <div>
+      {/* Aviso visual se estiver vendo outro cliente */}
+      {userId && (
+        <div
+          style={{
+            backgroundColor: "#e0f2fe",
+            color: "#0284c7",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            marginBottom: "20px",
+            fontWeight: "600",
+          }}
+        >
+          👁️ Visualizando Dashboard do Cliente
+        </div>
+      )}
+
       <div className={styles.dashboardLayout}>
-        {/* Gráfico */}
         <div>
           <FinancialChart
             ages={ages}
@@ -183,8 +206,6 @@ export function Dashboard() {
             dataProjected={dataProjected}
           />
         </div>
-
-        {/* Controles Laterais */}
         <div>
           <SimulacaoControls
             idade={idadeAposentadoria}
@@ -201,7 +222,6 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Seção de Projetos */}
       <div className={styles.projectsSection}>
         <MeusProjetos
           projects={projects}
@@ -219,13 +239,13 @@ export function Dashboard() {
         />
       </div>
 
-      {/* Modal Genérico */}
       <Modal isOpen={!!modalView} onClose={() => setModalView(null)}>
         {modalView === "add" && (
           <FormNovoProjeto
             onClose={() => setModalView(null)}
-            onSuccess={loadDashboardData}
+            onSuccess={handleSuccessForm}
             projectToEdit={projectToEdit}
+            ownerId={targetProfileId}
           />
         )}
       </Modal>

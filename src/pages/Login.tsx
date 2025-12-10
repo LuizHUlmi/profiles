@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "../components/ui/input/input";
 import { Button } from "../components/ui/button/Button"; // Importando o novo botão inteligente
 import styles from "./Login.module.css";
+import { useToast } from "../components/ui/toast/ToastContext";
 
 // --- Schemas de Validação ---
 const loginSchema = z.object({
@@ -33,6 +34,7 @@ type RecoveryData = z.infer<typeof recoverySchema>;
 
 export function Login() {
   const navigate = useNavigate();
+  const toast = useToast(); // <--- CHAMA O HOOK
 
   // Modos: 'login', 'register' ou 'recovery'
   const [mode, setMode] = useState<"login" | "register" | "recovery">("login");
@@ -63,16 +65,15 @@ export function Login() {
     });
 
     if (error) {
-      setFeedback({
-        message:
-          error.message === "Invalid login credentials"
-            ? "E-mail ou senha incorretos."
-            : error.message,
-        type: "error",
-      });
+      // SUBSTITUI O FEEDBACK VISUAL POR TOAST
+      toast.error(
+        error.message === "Invalid login credentials"
+          ? "E-mail ou senha incorretos."
+          : error.message
+      );
       setLoading(false);
     } else {
-      // Sucesso: O AuthContext vai detectar a mudança de sessão e redirecionar
+      toast.success("Login realizado com sucesso!"); // Opcional, pois vai redirecionar rápido
       navigate("/");
     }
   };
