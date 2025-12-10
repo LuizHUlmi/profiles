@@ -1,50 +1,58 @@
-/* src/pages/MeusDados.module.css (ou onde estiver seu componente) */
-
 .container {
-  max-width: 800px;
-  margin: 0 auto; /* Centraliza na tela */
+  max-width: 1200px; /* Largura máxima confortável */
+  margin: 0 auto;
   padding: 2rem;
+  font-family: inherit;
 }
 
-.title {
-  color: #2c80ff; /* Azul similar ao da imagem */
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
 }
 
-.card {
-  background-color: #fff;
-  border: 1px solid #e0e0e0; /* Borda cinza suave */
-  border-radius: 8px; /* Cantos arredondados */
-  padding: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); /* Sombra muito leve */
-
-  /* --- A MÁGICA DO GRID --- */
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* Duas colunas iguais */
-  gap: 1.5rem; /* Espaço entre os inputs */
+/* --- GRID FLEXÍVEL (Lado a Lado) --- */
+.rowContainer {
+  display: flex;
+  gap: 2rem; /* Espaço entre os cartões */
+  flex-wrap: wrap; /* Permite quebrar linha se faltar espaço */
+  align-items: flex-start; /* Alinha pelo topo */
+  margin-bottom: 2rem;
 }
 
-/* Classe para itens que devem ocupar a largura total */
-.fullWidth {
-  grid-column: span 2; /* Ocupa as 2 colunas */
+/* O Wrapper garante que o card cresça */
+.cardWrapper {
+  flex: 1; /* Ocupa todo o espaço disponível */
+  min-width: 400px; /* Largura mínima antes de quebrar para a linha de baixo */
 }
 
-/* Estilo do Botão Salvar */
-.saveButton {
-  background-color: #0d25aa; /* Verde escuro (Teal) */
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.75rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  width: fit-content; /* O botão ocupa apenas o espaço do texto */
-  margin-top: 1rem;
+/* --- BOTÃO CENTRALIZADO --- */
+.addButtonContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: -1rem; /* Aproxima um pouco dos cards acima */
+  margin-bottom: 3rem;
 }
 
-.saveButton:hover {
-  background-color: #0d25aa;
+/* --- SEÇÃO LARGURA TOTAL --- */
+.fullWidthSection {
+  width: 100%;
+}
+
+/* --- RESPONSIVIDADE (Mobile) --- */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .rowContainer {
+    gap: 1.5rem;
+  }
+
+  .cardWrapper {
+    min-width: 100%; /* No celular, força largura total */
+  }
 }

@@ -1,95 +1,198 @@
-/* src/components/layout/Sidebar.module.css */
+/* src/components/sidebar/Sidebar.module.css */
 
 .sidebar {
+  width: 260px; /* Largura aberta */
+  height: 100vh;
+  background-color: var(--bg-card);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  width: 250px; /* Largura expandida */
-  height: 100%;
-  background-color: var(
-    --bg-sidebar
-  ); /* Um azul bem escuro, similar ao bg-blue-950 */
-  color: var(--text-inverse);
-  transition: width 0.3s ease-in-out;
-  border-right: 1px solid #1a2942;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 50;
+  transition: width 0.3s ease; /* Animação suave */
 }
 
+/* Estado Colapsado */
 .sidebar.collapsed {
-  width: 70px; /* Largura colapsada (só para os ícones) */
+  width: 80px; /* Largura fechada */
 }
 
-/* --- Cabeçalho (Botão) --- */
+/* Header */
 .header {
-  padding: 1rem;
+  height: 70px;
   display: flex;
-  justify-content: center; /* Centraliza o ícone quando colapsado */
-  border-bottom: 1px solid #1a2942;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid transparent;
 }
 
-.sidebar:not(.collapsed) .header {
-  justify-content: flex-end; /* Alinha à direita quando expandido */
+.collapsed .header {
+  justify-content: center;
+  padding: 0;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0;
+  letter-spacing: -0.5px;
+  white-space: nowrap; /* Impede quebra */
 }
 
 .toggleButton {
   background: none;
   border: none;
-  color: #9ab;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0.5rem;
-  border-radius: 4px;
-}
-.toggleButton:hover {
-  color: #fff;
-  background-color: #1a2942;
-}
-
-/* --- Navegação (Links) --- */
-.nav {
-  flex: 1; /* Ocupa todo o espaço do meio */
-  padding: 1rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem; /* Espaço entre os links */
-}
-
-.navLink {
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
-  gap: 1rem; /* Espaço entre ícone e texto */
-  padding: 0.75rem 1.5rem;
-  margin: 0 0.75rem; /* Margem lateral */
-
-  color: #c0d0e0;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
-.sidebar.collapsed .navLink {
-  justify-content: center; /* Centraliza o ícone */
+.toggleButton:hover {
+  background-color: var(--bg-page);
+  color: var(--primary);
+}
+
+/* Navegação */
+.nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0.75rem;
+  gap: 0.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   padding: 0.75rem;
-  margin: 0 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap; /* Impede texto de quebrar linha */
+  height: 48px; /* Altura fixa para alinhar bem */
 }
 
-.navLink:hover {
-  background-color: #1a2942; /* Similar ao hover:bg-blue-900 */
-  color: #fff;
+.collapsed .navItem {
+  justify-content: center; /* Centraliza ícone quando fechado */
+  padding: 0.75rem 0;
 }
 
-.activeLink {
-  background-color: var(--primary-hover); /* Similar ao bg-blue-800 */
-  color: #fff;
+.navItem:hover {
+  background-color: var(--bg-page);
+  color: var(--primary);
+}
+
+.navItem.active {
+  background-color: #eff6ff;
+  color: var(--primary);
   font-weight: 600;
 }
 
-/* --- Rodapé --- */
+/* Container do ícone para garantir alinhamento */
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 0.5rem 1rem;
+}
+
+/* Footer */
 .footer {
-  padding: 1.5rem;
-  border-top: 1px solid #1a2942;
-  text-align: center;
-  color: #6a7b9c;
-  /* Oculta o texto com 'white-space' para evitar quebra de linha na transição */
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #fafafa;
+  overflow: hidden;
+  height: 70px;
+}
+
+.collapsed .footer {
+  justify-content: center;
+  padding: 0;
+}
+
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.collapsed .userSection {
+  justify-content: center;
+  flex: 0;
+}
+
+.userAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.userName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userRole {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.logoutButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.logoutButton:hover {
+  color: var(--danger);
+  background-color: #fee2e2;
 }

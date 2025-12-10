@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { useAuth } from "../context/AuthContext";
 import { useFinancialProjection } from "../hooks/useFinancialProjection";
 import { useProjects } from "../hooks/useProjects"; // <--- Hook novo
 import { useToast } from "../components/ui/toast/ToastContext";
-import { useParams } from "react-router-dom"; // <--- Importante: Para ler a URL
+import { useSearchParams } from "react-router-dom";
+import { calculateAge } from "../utils/date";
 
 // Componentes UI e Features
 import { FinancialChart } from "../components/financial/grafico/FinancialChart";
@@ -18,15 +18,14 @@ import { FormNovoProjeto } from "../components/projects/FormNovoProjeto";
 
 import type { Projeto, Simulacao } from "../types/database";
 import styles from "./Dashboard.module.css";
+import { useActiveClient } from "../context/ActiveClientContext";
+import { AlertCircle, Users } from "lucide-react";
 
 export function Dashboard() {
-  const { profile } = useAuth();
-  const { userId } = useParams(); // <--- Pega o ID da URL se existir
+  const { activeClientId } = useActiveClient();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
-
-  // DECISÃO DO ALVO:
-  // Se tem userId na URL, usamos ele. Se não, usamos o ID do perfil logado.
-  const targetProfileId = userId || profile?.id;
+  const simulacaoIdUrl = searchParams.get("simulacaoId");
 
   // --- Hooks de Dados ---
   const { projects, fetchProjects, deleteProject } = useProjects();
@@ -40,14 +39,16 @@ export function Dashboard() {
   const [currentSim, setCurrentSim] = useState<Simulacao | null>(null);
   const [activeProjectIds, setActiveProjectIds] = useState<number[]>([]);
 
-  // Sliders
-  const [idadeAtual] = useState(38);
-  const [patrimonioAtual] = useState(50000);
+  // --- SLIDERS & DADOS VITAIS ---
+  // Idade padrão temporária (caso não tenha data de nascimento)
+  const [idadeAtual, setIdadeAtual] = useState(30);
+  const [idadeCalculada, setIdadeCalculada] = useState(false); // Para saber se veio do banco
 
+  const [patrimonioAtual, setPatrimonioAtual] = useState(0);
   const [idadeAposentadoria, setIdadeAposentadoria] = useState(65);
   const [rendaDesejada, setRendaDesejada] = useState(15000);
-  const [outrasRendas, setOutrasRendas] = useState(2500);
-  const [investimentoMensal, setInvestimentoMensal] = useState(2000);
+  const [outrasRendas, setOutrasRendas] = useState(0);
+  const [investimentoMensal, setInvestimentoMensal] = useState(0);
 
   // --- Projeção ---
   const { ages, years, dataProjected } = useFinancialProjection({
@@ -61,80 +62,99 @@ export function Dashboard() {
     activeProjectIds,
   });
 
-  // --- Carregamento ---
+  // --- 1. CARREGAMENTO GERAL ---
   useEffect(() => {
-    // Só carrega se tivermos um alvo definido
-    if (targetProfileId) {
-      loadSimulationData(targetProfileId);
-      fetchProjects(targetProfileId);
-    }
-  }, [targetProfileId, fetchProjects]);
+    if (!activeClientId) return;
 
-  const loadSimulationData = async (id: string) => {
-    // Busca Simulação do ALVO (não necessariamente do logado)
-    const { data: simData } = await supabase
-      .from("simulacoes")
-      .select("*")
-      .eq("perfil_id", id)
-      .eq("ativo", true)
-      .order("created_at", { ascending: false })
-      .maybeSingle();
+    // A. Carrega Projetos
+    fetchProjects(activeClientId);
 
-    if (simData) {
-      setCurrentSim(simData);
-      setIdadeAposentadoria(simData.idade_aposentadoria);
-      setRendaDesejada(simData.renda_desejada);
-      setOutrasRendas(simData.outras_rendas);
-      setInvestimentoMensal(simData.investimento_mensal);
+    // B. Carrega Dados do Cliente (Idade) e Simulação
+    loadClientAndSimulation(activeClientId, simulacaoIdUrl);
 
-      const { data: links } = await supabase
-        .from("simulacao_projetos")
-        .select("projeto_id")
-        .eq("simulacao_id", simData.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClientId, simulacaoIdUrl, fetchProjects]);
 
-      if (links) {
-        setActiveProjectIds(links.map((l) => l.projeto_id));
+  const loadClientAndSimulation = async (
+    clientId: string,
+    simId: string | null
+  ) => {
+    try {
+      // 1. BUSCAR DATA DE NASCIMENTO (PERFIL)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { data: perfil, error: perfilError } = await supabase
+        .from("perfis")
+        .select("data_nascimento")
+        .eq("id", clientId)
+        .single();
+
+      if (perfil?.data_nascimento) {
+        const idadeReal = calculateAge(perfil.data_nascimento);
+        setIdadeAtual(idadeReal);
+        setIdadeCalculada(true);
+
+        // Ajuste defensivo: Se a aposentadoria estava menor que a idade real, empurra pra frente
+        if (idadeAposentadoria <= idadeReal) {
+          setIdadeAposentadoria(idadeReal + 10);
+        }
+      } else {
+        // Se não tiver data, avisamos ou usamos padrão
+        setIdadeCalculada(false);
       }
-    } else {
-      // Reseta se não tiver simulação (importante ao trocar de cliente)
-      setCurrentSim(null);
-      setActiveProjectIds([]);
+
+      // 2. BUSCAR SIMULAÇÃO
+      let query = supabase
+        .from("simulacoes")
+        .select("*")
+        .eq("perfil_id", clientId);
+
+      if (simId) {
+        query = query.eq("id", simId);
+      } else {
+        query = query
+          .eq("ativo", true)
+          .order("created_at", { ascending: false });
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { data: simData, error: simError } = await query.maybeSingle();
+
+      if (simData) {
+        setCurrentSim(simData);
+        // Só sobrescrevemos sliders se a simulação existir
+        setIdadeAposentadoria(simData.idade_aposentadoria);
+        setRendaDesejada(simData.renda_desejada);
+        setOutrasRendas(simData.outras_rendas);
+        setInvestimentoMensal(simData.investimento_mensal);
+        setPatrimonioAtual(simData.patrimonio_atual);
+
+        // Projetos ativos
+        const { data: links } = await supabase
+          .from("simulacao_projetos")
+          .select("projeto_id")
+          .eq("simulacao_id", simData.id);
+        setActiveProjectIds(links ? links.map((l) => l.projeto_id) : []);
+      } else {
+        // Reset se não houver simulação
+        setCurrentSim(null);
+        setActiveProjectIds([]);
+        setPatrimonioAtual(0);
+        setInvestimentoMensal(0);
+        // Mantemos a idade que calculamos no passo 1!
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
     }
   };
 
-  // --- Handlers ---
-
-  const handleToggleProject = async (projectId: number, isActive: boolean) => {
-    if (!currentSim) {
-      toast.info("Salve a simulação primeiro para vincular projetos.");
-      return;
-    }
-    setActiveProjectIds((prev) =>
-      isActive ? [...prev, projectId] : prev.filter((id) => id !== projectId)
-    );
-
-    if (isActive) {
-      await supabase.from("simulacao_projetos").insert({
-        simulacao_id: currentSim.id,
-        projeto_id: projectId,
-      });
-    } else {
-      await supabase
-        .from("simulacao_projetos")
-        .delete()
-        .eq("simulacao_id", currentSim.id)
-        .eq("projeto_id", projectId);
-    }
-  };
-
+  // --- AÇÕES (Salvar, Projetos...) permanecem iguais ---
   const handleSaveSimulation = async () => {
-    if (!targetProfileId) return;
+    if (!activeClientId) return;
     setIsSavingSim(true);
-
     try {
       const simPayload = {
-        perfil_id: targetProfileId, // <--- Salva para o CLIENTE ALVO
-        titulo: "Cenário Principal",
+        perfil_id: activeClientId,
+        titulo: currentSim?.titulo || "Cenário Principal",
         idade_aposentadoria: idadeAposentadoria,
         renda_desejada: rendaDesejada,
         outras_rendas: outrasRendas,
@@ -144,20 +164,23 @@ export function Dashboard() {
       };
 
       if (currentSim) {
-        await supabase
+        const { error, data } = await supabase
           .from("simulacoes")
           .update(simPayload)
-          .eq("id", currentSim.id);
-        toast.success("Simulação atualizada!");
+          .eq("id", currentSim.id)
+          .select();
+        if (error) throw error;
+        toast.success("Cenário atualizado!");
+        if (data) setCurrentSim(data[0]);
       } else {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("simulacoes")
           .insert(simPayload)
           .select()
           .single();
+        if (error) throw error;
+        toast.success("Cenário criado!");
         if (data) setCurrentSim(data);
-        toast.success("Simulação criada!");
-        loadSimulationData(targetProfileId);
       }
     } catch (error) {
       console.error(error);
@@ -167,36 +190,125 @@ export function Dashboard() {
     }
   };
 
+  const handleToggleProject = async (projectId: number, isActive: boolean) => {
+    if (!currentSim) return toast.info("Crie um cenário primeiro.");
+    setActiveProjectIds((prev) =>
+      isActive ? [...prev, projectId] : prev.filter((id) => id !== projectId)
+    );
+    if (isActive)
+      await supabase.from("simulacao_projetos").insert({
+        simulacao_id: currentSim.id,
+        projeto_id: projectId,
+        ativo: true,
+      });
+    else
+      await supabase
+        .from("simulacao_projetos")
+        .delete()
+        .eq("simulacao_id", currentSim.id)
+        .eq("projeto_id", projectId);
+  };
+
   const handleDeleteProject = async (id: number) => {
-    if (!confirm("Tem certeza que deseja excluir este projeto?")) return;
+    if (!confirm("Tem certeza?")) return;
     await deleteProject(id);
+    setActiveProjectIds((prev) => prev.filter((pId) => pId !== id));
   };
 
   const handleSuccessForm = () => {
-    if (targetProfileId) fetchProjects(targetProfileId);
+    if (activeClientId) fetchProjects(activeClientId);
   };
 
-  // Se não tiver ID nenhum (ex: erro de carregamento), mostra aviso
-  if (!targetProfileId)
-    return <div style={{ padding: 20 }}>Carregando perfil...</div>;
+  // --- RENDERIZAÇÃO ---
+  if (!activeClientId) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "80vh",
+          color: "var(--text-secondary)",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            background: "#e2e8f0",
+            padding: "20px",
+            borderRadius: "50%",
+            marginBottom: "20px",
+          }}
+        >
+          <Users size={48} color="#64748b" />
+        </div>
+        <h2 style={{ color: "var(--text-primary)" }}>
+          Nenhum cliente selecionado
+        </h2>
+        <p>Selecione um cliente na barra superior.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Aviso visual se estiver vendo outro cliente */}
-      {userId && (
-        <div
-          style={{
-            backgroundColor: "#e0f2fe",
-            color: "#0284c7",
-            padding: "10px 20px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-            fontWeight: "600",
-          }}
-        >
-          👁️ Visualizando Dashboard do Cliente
+      <div
+        style={{
+          marginBottom: "20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+        }}
+      >
+        <div>
+          <h2 style={{ margin: 0, fontSize: "1.5rem" }}>
+            Planejamento Financeiro
+          </h2>
+          <div
+            style={{
+              display: "flex",
+              gap: "15px",
+              alignItems: "center",
+              marginTop: "5px",
+            }}
+          >
+            <p style={{ margin: 0, color: "var(--text-secondary)" }}>
+              Cenário: <strong>{currentSim?.titulo || "Novo Cenário"}</strong>
+            </p>
+
+            {/* Feedback de Idade */}
+            {idadeCalculada ? (
+              <span
+                style={{
+                  fontSize: "0.85rem",
+                  background: "#dcfce7",
+                  color: "#166534",
+                  padding: "2px 8px",
+                  borderRadius: "12px",
+                }}
+              >
+                Idade Real: {idadeAtual} anos
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontSize: "0.85rem",
+                  background: "#fee2e2",
+                  color: "#991b1b",
+                  padding: "2px 8px",
+                  borderRadius: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <AlertCircle size={12} /> Idade Padrão (Complete o Perfil)
+              </span>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       <div className={styles.dashboardLayout}>
         <div>
@@ -240,12 +352,12 @@ export function Dashboard() {
       </div>
 
       <Modal isOpen={!!modalView} onClose={() => setModalView(null)}>
-        {modalView === "add" && (
+        {modalView === "add" && activeClientId && (
           <FormNovoProjeto
             onClose={() => setModalView(null)}
             onSuccess={handleSuccessForm}
             projectToEdit={projectToEdit}
-            ownerId={targetProfileId}
+            ownerId={activeClientId}
           />
         )}
       </Modal>

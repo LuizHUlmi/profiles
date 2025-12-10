@@ -1,193 +1,300 @@
 // src/components/layout/Navbar.tsx
 
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
-import { useAuth } from "../../../context/AuthContext";
+// Removi useParams e useLocation pois não dependemos mais tanto da URL
+import { useNavigate } from "react-router-dom";
+
 import styles from "./Navbar.module.css";
 
-// Tipos auxiliares
+// ... (Imports de UI mantidos: Button, Modal, Icons...)
+
+import { Plus, Trash2, AlertTriangle } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
+import { useActiveClient } from "../../../context/ActiveClientContext";
+import { useToast } from "../../ui/toast/ToastContext";
+import { supabase } from "../../../lib/supabase";
+import { Button } from "../../ui/button/Button";
+import { Modal } from "../../ui/modal/Modal";
+import { NewSimulationModal } from "../../financial/form/NewSimulationModal";
+
 type Item = { id: string; nome: string | null; titulo?: string };
 
 export function Navbar() {
   const { profile } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { userId } = useParams(); // ID do cliente na URL (se houver)
+  const { activeClientId, setActiveClientId } = useActiveClient(); // <--- Usando o Global
+  const navigate = useNavigate(); // Usado apenas para Simulação
+  const toast = useToast();
 
-  // Estados das Listas
+  // ... (Estados locais consultores/clientes/simulacoes mantidos) ...
   const [consultores, setConsultores] = useState<Item[]>([]);
   const [clientes, setClientes] = useState<Item[]>([]);
   const [simulacoes, setSimulacoes] = useState<Item[]>([]);
 
-  // Estados das Seleções
   const [selectedConsultor, setSelectedConsultor] = useState<string>("");
-  const [selectedCliente, setSelectedCliente] = useState<string>("");
+  // Não precisamos de selectedCliente local, usamos activeClientId do contexto
   const [selectedSimulacao, setSelectedSimulacao] = useState<string>("");
 
-  // Permissões
+  // ... (Estados de Modais mantidos) ...
+  const [isNewSimModalOpen, setIsNewSimModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const isMaster = profile?.role === "master";
   const isConsultor = profile?.role === "consultor";
+  const isStaff = isMaster || isConsultor;
 
-  // --- EFEITOS DE CARREGAMENTO ---
+  // 1. Inicialização de Consultor
+  useEffect(() => {
+    if (isConsultor && profile?.id) setSelectedConsultor(profile.id);
+  }, [isConsultor, profile]);
 
-  // 1. Carregar Consultores (Apenas para Master)
+  // 2. Carregar Consultores (Master)
   useEffect(() => {
     if (isMaster) {
-      async function loadConsultores() {
-        const { data } = await supabase
-          .from("consultores")
-          .select("id, nome")
-          .order("nome");
-        setConsultores(data || []);
-      }
-      loadConsultores();
-    } else if (isConsultor && profile?.id) {
-      // Se for consultor, ele já é o "selecionado"
-      setSelectedConsultor(profile.id);
-    }
-  }, [isMaster, isConsultor, profile?.id]);
-
-  // 2. Carregar Clientes (Depende do Consultor selecionado)
-  useEffect(() => {
-    async function loadClientes() {
-      if (!selectedConsultor) {
-        setClientes([]);
-        return;
-      }
-      const { data } = await supabase
-        .from("perfis")
+      supabase
+        .from("consultores")
         .select("id, nome")
-        .eq("consultor_id", selectedConsultor)
-        .order("nome");
-      setClientes(data || []);
+        .order("nome")
+        .then(({ data }) => setConsultores(data || []));
     }
-    loadClientes();
-  }, [selectedConsultor]);
+  }, [isMaster]);
 
-  // 3. Sincronizar Cliente Selecionado com a URL
+  // 3. Carregar Clientes (Baseado no Consultor Selecionado)
   useEffect(() => {
-    if (userId) {
-      setSelectedCliente(userId);
-    } else {
-      // Se não tem ID na URL, verifica se estamos na rota raiz (dashboard do próprio usuário?)
-      // Por enquanto, limpamos a seleção se sair da rota de dashboard
-      if (!location.pathname.includes("/dashboard/")) {
-        setSelectedCliente("");
-      }
-    }
-  }, [userId, location.pathname]);
+    if (!isStaff || !selectedConsultor) return setClientes([]);
 
-  // 4. Carregar Simulações (Depende do Cliente selecionado)
+    supabase
+      .from("perfis")
+      .select("id, nome")
+      .eq("consultor_id", selectedConsultor)
+      .order("nome")
+      .then(({ data }) => setClientes(data || []));
+  }, [selectedConsultor, isStaff]);
+
+  // 4. Carregar Simulações (Baseado no CLIENTE ATIVO DO CONTEXTO)
+  const loadSimulacoes = async () => {
+    if (!activeClientId) return setSimulacoes([]); // <--- Olha pro Contexto
+
+    const { data } = await supabase
+      .from("simulacoes")
+      .select("id, titulo")
+      .eq("perfil_id", activeClientId)
+      .order("created_at", { ascending: false });
+
+    setSimulacoes(
+      data?.map((s) => ({ id: s.id, nome: s.titulo || "Sem Título" })) || []
+    );
+  };
+
   useEffect(() => {
-    async function loadSimulacoes() {
-      if (!selectedCliente) {
-        setSimulacoes([]);
-        return;
-      }
-      const { data } = await supabase
-        .from("simulacoes")
-        .select("id, titulo")
-        .eq("perfil_id", selectedCliente)
-        .order("created_at", { ascending: false });
-
-      const formatedData =
-        data?.map((s) => ({ id: s.id, nome: s.titulo || "Sem Título" })) || [];
-      setSimulacoes(formatedData);
-
-      // Opcional: Selecionar automaticamente a primeira (mais recente)
-      // if (formatedData.length > 0) setSelectedSimulacao(formatedData[0].id);
-    }
     loadSimulacoes();
-  }, [selectedCliente]);
+  }, [activeClientId]); // Recarrega se mudar o cliente global
 
   // --- HANDLERS ---
 
   const handleConsultorChange = (id: string) => {
     setSelectedConsultor(id);
-    setSelectedCliente("");
+    setActiveClientId(null); // Reseta o cliente global se mudar o consultor
     setSelectedSimulacao("");
-    navigate("/cliente"); // Volta para lista ao trocar consultor
   };
 
   const handleClienteChange = (id: string) => {
-    setSelectedCliente(id);
+    // AQUI ESTÁ A MÁGICA:
+    // Apenas setamos o ID no contexto global.
+    // Não navegamos. As páginas (Dashboard/Perfil) vão reagir sozinhas.
+    setActiveClientId(id);
     setSelectedSimulacao("");
-    if (id) {
-      navigate(`/dashboard/${id}`);
-    }
   };
 
   const handleSimulacaoChange = (id: string) => {
     setSelectedSimulacao(id);
-    // Aqui você poderá passar o ID da simulação para o Dashboard via URL ou Contexto
-    // Ex: navigate(`/dashboard/${selectedCliente}?simulacao=${id}`)
+    // Para simulação, ainda usamos a URL Query Param, pois é um filtro dentro da página
+    // Mas agora navegamos para a rota ATUAL + query param
+    // Ex: Se estou em /perfil, continuo em /perfil?simulacao=... (embora perfil ignore isso)
+    // Se estou em /, continuo em /?simulacao=...
+
+    // Pequena forçada para garantir que vá para o Dashboard visualizar a simulação
+    // (Opcional: Você pode querer que fique na página atual)
+    navigate(`/?simulacaoId=${id}`);
   };
 
-  // Se for cliente final, talvez não precise dessa Navbar (ou mostra só simulações)
-  // Por enquanto, mostra para Staff (Master/Consultor)
-  if (!isMaster && !isConsultor) return null;
+  // ... (Resto das funções de delete/create mantidas, mas usando activeClientId)
+  const handleSuccessNewStudy = (newId: string) => {
+    loadSimulacoes();
+    setSelectedSimulacao(newId);
+    navigate(`/?simulacaoId=${newId}`);
+  };
+
+  const confirmDeleteStudy = async () => {
+    if (!selectedSimulacao) return;
+    setIsDeleting(true);
+    try {
+      await supabase.from("simulacoes").delete().eq("id", selectedSimulacao);
+      toast.success("Cenário excluído.");
+      setSelectedSimulacao("");
+      navigate(`/?simulacaoId=`); // Limpa a query string
+      loadSimulacoes();
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao excluir.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Se não tiver perfil carregado, não renderiza
+  if (!profile) return null;
 
   return (
-    <nav className={styles.navbar}>
-      <div className={styles.badge}>
-        {isMaster ? "Visão Master" : "Visão Consultor"}
-      </div>
-
-      {/* NÍVEL 1: CONSULTOR (Apenas Master vê este filtro) */}
-      {isMaster && (
-        <div className={styles.group}>
-          <label className={styles.label}>Consultor</label>
-          <select
-            className={styles.select}
-            value={selectedConsultor}
-            onChange={(e) => handleConsultorChange(e.target.value)}
-          >
-            <option value="">Selecione...</option>
-            {consultores.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome}
-              </option>
-            ))}
-          </select>
+    <>
+      <nav className={styles.navbar}>
+        <div
+          className={styles.badge}
+          style={{ backgroundColor: !isStaff ? "var(--primary)" : undefined }}
+        >
+          {isMaster
+            ? "Visão Master"
+            : isConsultor
+            ? "Visão Consultor"
+            : "Meus Cenários"}
         </div>
-      )}
 
-      {/* NÍVEL 2: CLIENTE */}
-      <div className={styles.group}>
-        <label className={styles.label}>Cliente</label>
-        <select
-          className={styles.select}
-          value={selectedCliente}
-          onChange={(e) => handleClienteChange(e.target.value)}
-          disabled={!selectedConsultor}
-        >
-          <option value="">Selecione um cliente...</option>
-          {clientes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
-          ))}
-        </select>
-      </div>
+        {isStaff && (
+          <>
+            {isMaster && (
+              <div className={styles.group}>
+                <label className={styles.label}>Consultor</label>
+                <select
+                  className={styles.select}
+                  value={selectedConsultor}
+                  onChange={(e) => handleConsultorChange(e.target.value)}
+                >
+                  <option value="">Selecione...</option>
+                  {consultores.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className={styles.group}>
+              <label className={styles.label}>Cliente Ativo</label>
+              <select
+                className={styles.select}
+                value={activeClientId || ""} // <--- Lê do Contexto
+                onChange={(e) => handleClienteChange(e.target.value)}
+                disabled={!selectedConsultor}
+              >
+                <option value="">Selecione para editar...</option>
+                {clientes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
 
-      {/* NÍVEL 3: SIMULAÇÃO / ESTUDO */}
-      <div className={styles.group}>
-        <label className={styles.label}>Cenário / Estudo</label>
-        <select
-          className={styles.select}
-          value={selectedSimulacao}
-          onChange={(e) => handleSimulacaoChange(e.target.value)}
-          disabled={!selectedCliente}
-        >
-          <option value="">Atual (Ativo)</option>
-          {simulacoes.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.nome}
-            </option>
-          ))}
-        </select>
-      </div>
-    </nav>
+        <div className={styles.group}>
+          <label className={styles.label}>Cenário / Estudo</label>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <select
+              className={styles.select}
+              style={{ flex: 1 }}
+              value={selectedSimulacao}
+              onChange={(e) => handleSimulacaoChange(e.target.value)}
+              disabled={!activeClientId}
+            >
+              <option value="">(Último ativo)</option>
+              {simulacoes.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nome}
+                </option>
+              ))}
+            </select>
+            <Button
+              size="sm"
+              disabled={!activeClientId}
+              onClick={() => setIsNewSimModalOpen(true)}
+            >
+              <Plus size={16} />
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              disabled={!selectedSimulacao}
+              onClick={() => setIsDeleteModalOpen(true)}
+            >
+              <Trash2 size={16} />
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      <Modal
+        isOpen={isNewSimModalOpen}
+        onClose={() => setIsNewSimModalOpen(false)}
+      >
+        {activeClientId && (
+          <NewSimulationModal
+            clientId={activeClientId}
+            onClose={() => setIsNewSimModalOpen(false)}
+            onSuccess={handleSuccessNewStudy}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+      >
+        {/* ... Conteúdo do modal de delete igual ... */}
+        <div style={{ padding: "0.5rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "1rem",
+              color: "var(--danger)",
+            }}
+          >
+            <AlertTriangle size={24} />
+            <h3
+              style={{
+                margin: 0,
+                fontSize: "1.2rem",
+                fontWeight: "700",
+                color: "var(--text-primary)",
+              }}
+            >
+              Excluir?
+            </h3>
+          </div>
+          <p>Confirma exclusão permanente?</p>
+          <div
+            style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}
+          >
+            <Button
+              variant="ghost"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={confirmDeleteStudy}
+              loading={isDeleting}
+            >
+              Sim, excluir
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }

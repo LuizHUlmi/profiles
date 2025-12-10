@@ -1,95 +1,151 @@
-// src/components/layout/Sidebar.tsx
+// src/components/sidebar/Sidebar.tsx
 
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
+import { NavLink, useParams } from "react-router-dom";
+
 import styles from "./Sidebar.module.css";
-
 import {
   LayoutDashboard,
-  Target,
   Users,
-  ArrowLeft,
-  ArrowRight,
+  Briefcase,
+  UserCircle,
   LogOut,
-  UserPen,
+  ChevronLeft,
+  ChevronRight,
+  UserCog,
 } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+// Definimos o que a Sidebar espera receber do Pai
+interface SidebarProps {
+  isCollapsed: boolean;
+  toggleSidebar: () => void;
+}
+
+export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
   const { signOut, profile } = useAuth();
+  const { userId } = useParams();
 
-  // VERIFICAÇÃO DE SEGURANÇA VISUAL
-  // Só mostra o menu se for da equipe (staff) E tiver nível 'master'
-  const isMaster = profile?.userType === "staff" && profile?.role === "master";
-
-  const getNavLinkClass = ({ isActive }: { isActive: boolean }) => {
-    return isActive ? `${styles.navLink} ${styles.activeLink}` : styles.navLink;
-  };
+  // Removemos o useState interno. Agora usamos as props isCollapsed e toggleSidebar
 
   return (
-    <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
+    <aside
+      className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}
+    >
       <div className={styles.header}>
+        {!isCollapsed && <h1 className={styles.logo}>AVERE</h1>}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggleSidebar}
           className={styles.toggleButton}
+          title={isCollapsed ? "Expandir" : "Recolher"}
         >
-          {collapsed ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
+          {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
       </div>
 
       <nav className={styles.nav}>
-        <NavLink to="/" end className={getNavLinkClass}>
-          <LayoutDashboard size={20} />
-          {!collapsed && <span>Dashboard</span>}
+        <NavLink
+          to={userId ? `/dashboard/${userId}` : "/"}
+          className={({ isActive }) =>
+            `${styles.navItem} ${isActive ? styles.active : ""}`
+          }
+          title="Dashboard"
+          end
+        >
+          <div className={styles.iconContainer}>
+            <LayoutDashboard size={22} />
+          </div>
+          {!isCollapsed && <span>Dashboard</span>}
         </NavLink>
 
-        <NavLink to="/planejamento" className={getNavLinkClass}>
-          <Target size={20} />
-          {!collapsed && <span>Planejamento</span>}
-        </NavLink>
+        {userId &&
+          (profile?.role === "master" || profile?.role === "consultor") && (
+            <NavLink
+              to={`/perfil/${userId}`}
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+              title="Dados do Cliente"
+            >
+              <div className={styles.iconContainer}>
+                <UserCog size={22} />
+              </div>
+              {!isCollapsed && <span>Dados do Cliente</span>}
+            </NavLink>
+          )}
 
-        <NavLink to="/cliente" className={getNavLinkClass}>
-          <UserPen size={20} />
-          {!collapsed && <span>Clientes</span>}
-        </NavLink>
+        {!isCollapsed && <div className={styles.divider}></div>}
 
-        {/* RENDERIZAÇÃO CONDICIONAL: Só aparece para Master */}
-        {isMaster && (
-          <NavLink to="/equipe" className={getNavLinkClass}>
-            <Users size={20} />
-            {!collapsed && <span>Equipe</span>}
+        {(profile?.role === "master" || profile?.role === "consultor") && (
+          <NavLink
+            to="/cliente"
+            className={({ isActive }) =>
+              `${styles.navItem} ${isActive ? styles.active : ""}`
+            }
+            title="Carteira de Clientes"
+          >
+            <div className={styles.iconContainer}>
+              <Users size={22} />
+            </div>
+            {!isCollapsed && <span>Clientes</span>}
           </NavLink>
         )}
+
+        {profile?.role === "master" && (
+          <NavLink
+            to="/equipe"
+            className={({ isActive }) =>
+              `${styles.navItem} ${isActive ? styles.active : ""}`
+            }
+            title="Equipe"
+          >
+            <div className={styles.iconContainer}>
+              <Briefcase size={22} />
+            </div>
+            {!isCollapsed && <span>Equipe</span>}
+          </NavLink>
+        )}
+
+        <NavLink
+          to="/perfil"
+          className={({ isActive }) =>
+            `${styles.navItem} ${isActive ? styles.active : ""}`
+          }
+          title="Minha Conta"
+          end
+        >
+          <div className={styles.iconContainer}>
+            <UserCircle size={22} />
+          </div>
+          {!isCollapsed && <span>Minha Conta</span>}
+        </NavLink>
       </nav>
 
       <div className={styles.footer}>
-        <button
-          onClick={signOut}
-          className={styles.navLink}
-          style={{
-            width: "100%",
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            color: "#ff8787",
-            marginTop: "auto",
-          }}
-        >
-          <LogOut size={20} />
-          {!collapsed && <span style={{ marginLeft: "1rem" }}>Sair</span>}
-        </button>
-        {!collapsed && (
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: "1rem",
-              opacity: 0.5,
-              fontSize: "0.75rem",
-            }}
-          >
-            v1.0.0
+        <div className={styles.userSection}>
+          <div className={styles.userAvatar}>
+            {profile?.nome?.charAt(0).toUpperCase() || "U"}
           </div>
+          {!isCollapsed && (
+            <div className={styles.userInfo}>
+              <span className={styles.userName}>{profile?.nome}</span>
+              <span className={styles.userRole}>
+                {profile?.role === "master"
+                  ? "Master"
+                  : profile?.role === "consultor"
+                  ? "Consultor"
+                  : "Cliente"}
+              </span>
+            </div>
+          )}
+        </div>
+        {!isCollapsed && (
+          <button
+            onClick={signOut}
+            className={styles.logoutButton}
+            title="Sair"
+          >
+            <LogOut size={20} />
+          </button>
         )}
       </div>
     </aside>

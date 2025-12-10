@@ -4,7 +4,7 @@ import ReactECharts from "echarts-for-react";
 
 type FinancialChartProps = {
   ages: number[];
-  years: string[];
+  years: (string | number)[];
   dataProjected: number[];
 };
 

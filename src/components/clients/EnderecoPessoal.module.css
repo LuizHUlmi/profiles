@@ -1,49 +1,40 @@
-/* src/components/forms/DadosPessoaisForm.module.css */
-
 .container {
-  margin: 0 auto 2rem auto; /* Centraliza e dá um espaçamento inferior para separação */
-  padding: 0; /* Remove o padding do container externo, o card já tem */
-  font-family: sans-serif;
+  margin-bottom: 2rem;
+  font-family: inherit; /* Usa a fonte padrão do sistema */
 }
 
 .title {
-  color: #2c80ff; /* Azul similar ao da imagem */
+  color: var(
+    --text-primary,
+    #1e293b
+  ); /* Usa a cor padrão de texto ou fallback */
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .card {
-  background-color: #fff;
-  border: 1px solid #e0e0e0; /* Borda cinza suave */
-  border-radius: 8px; /* Cantos arredondados */
+  background-color: var(--bg-card, #fff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
   padding: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); /* Sombra muito leve */
+  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgb(0 0 0 / 0.05));
 
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem; /* Espaço entre os inputs */
+  /* IMPORTANTE: Flex Column */
+  /* Isso permite que as divs de grid que criamos no React (linhas) fiquem uma embaixo da outra */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .fullWidth {
-  grid-column: span 2; /* Ocupa as 2 colunas */
+  width: 100%;
 }
 
-/* Estilo do Botão Salvar (dentro do card) */
-.saveButton {
-  background-color: #004d40; /* Verde escuro (Teal) */
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.75rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  width: fit-content; /* O botão ocupa apenas o espaço do texto */
-  margin-top: 1rem; /* Espaçamento da parte de cima */
-  transition: background-color 0.2s ease;
-}
-
-.saveButton:hover {
-  background-color: #00382e;
-}
+/* Nota: Removemos a classe .saveButton antiga.
+   Agora o estilo do botão é controlado pelo componente <Button /> 
+   que importamos do UI Kit.
+*/

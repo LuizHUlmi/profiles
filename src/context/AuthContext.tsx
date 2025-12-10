@@ -1,13 +1,13 @@
-// src/contexts/AuthContext.tsx
-
 import { createContext, useContext, useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import type { UserRole } from "../types/database";
 
-type UserType = "staff" | "cliente";
+// MUDANÇA 1: Padronizando para 'client' (inglês) e exportando
+export type UserType = "staff" | "client";
 
-type UserProfile = {
+// MUDANÇA 2: Exportando o tipo para podermos usar em outros lugares se precisar
+export type UserProfile = {
   id: string;
   nome: string;
   role?: UserRole;
@@ -22,7 +22,6 @@ type AuthContextType = {
   signOut: () => Promise<void>;
 };
 
-// --- MUDANÇA AQUI: Remova o 'export' desta linha ---
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
@@ -67,7 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile({
           id: cliente.id,
           nome: cliente.nome,
-          userType: "cliente",
+          // MUDANÇA 3: Atualizado para 'client' para bater com o novo Contexto
+          userType: "client",
         });
       }
     } catch (error) {
@@ -119,6 +119,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// O Hook continua sendo exportado
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

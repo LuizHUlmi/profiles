@@ -53,3 +53,10 @@ export const unmaskCurrency = (value: string) => {
   if (!value) return 0;
   return Number(value.replace(/\D/g, "")) / 100;
 };
+
+export const maskCEP = (value: string) => {
+  return value
+    .replace(/\D/g, "") // Remove tudo o que não é dígito
+    .replace(/(\d{5})(\d)/, "$1-$2") // Coloca traço após o 5º dígito
+    .replace(/(-\d{3})\d+?$/, "$1"); // Impede digitar mais que 8 dígitos
+};

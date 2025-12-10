@@ -1,69 +1,73 @@
-// src/components/forms/DadosPessoaisForm.tsx
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
-import { Input } from "../ui/input/input";
+
 import styles from "./DadosPessoaisCard.module.css";
 import { maskCPF, maskPhone, unmask } from "../../utils/masks";
 
-interface DadosPessoaisFormProps {
-  title: string;
-  onSuccess?: () => void;
-}
+// ADICIONEI O ÍCONE 'X'
+import { Save, X } from "lucide-react";
+import { useToast } from "../ui/toast/ToastContext";
+import { Input } from "../ui/input/input";
+import { Button } from "../ui/button/Button";
 
-type PerfilFormData = {
-  nomeCompleto: string;
-  cpf: string;
-  email: string;
-  dataNascimento: string;
-  telefone: string;
-  expectativaVida: string;
-};
+interface DadosPessoaisCardProps {
+  title: string;
+  targetId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initialData?: any;
+  prefixo?: string;
+  isClient?: boolean;
+  // NOVA PROPRIEDADE OPCIONAL
+  onRemove?: () => void;
+}
 
 export function DadosPessoaisCard({
   title,
-  onSuccess,
-}: DadosPessoaisFormProps) {
+  targetId,
+  initialData,
+  prefixo = "",
+  isClient = true,
+  onRemove, // Recebendo a função
+}: DadosPessoaisCardProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
+
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
-  } = useForm<PerfilFormData>();
+  } = useForm();
 
-  const onSubmit = async (data: PerfilFormData) => {
+  useEffect(() => {
+    if (initialData) reset(initialData);
+  }, [initialData, reset]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onSubmit = async (data: any) => {
+    if (!targetId) return;
     setIsSubmitting(true);
 
     try {
-      const perfilParaSalvar = {
-        nome: data.nomeCompleto,
-        // 2. LIMPAMOS OS DADOS ANTES DE SALVAR (Normatização)
-        // Salvamos no banco apenas "12345678900", sem pontos/traços
-        cpf: unmask(data.cpf),
-        email: data.email,
-        data_nascimento: data.dataNascimento || null,
-        telefone: unmask(data.telefone), // Salvamos apenas "11999999999"
-        expectativa_vida: data.expectativaVida
-          ? parseInt(data.expectativaVida)
-          : null,
-      };
+      const table = isClient ? "perfis" : "consultores";
+      const payload = { ...data };
 
-      console.log("Enviando limpo para o banco:", perfilParaSalvar);
+      if (payload[`${prefixo}cpf`])
+        payload[`${prefixo}cpf`] = unmask(payload[`${prefixo}cpf`]);
+      if (payload[`${prefixo}telefone`])
+        payload[`${prefixo}telefone`] = unmask(payload[`${prefixo}telefone`]);
 
       const { error } = await supabase
-        .from("perfis")
-        .insert(perfilParaSalvar)
-        .select()
-        .single();
+        .from(table)
+        .update(payload)
+        .eq("id", targetId);
 
       if (error) throw error;
-
-      alert(`${title} salvo com sucesso!`);
-      if (onSuccess) onSuccess();
+      toast.success(`${title} salvo com sucesso!`);
     } catch (error) {
-      console.error("Erro ao salvar:", error);
-      alert("Erro ao salvar. Verifique se o CPF já não existe.");
+      console.error(error);
+      toast.error("Erro ao salvar.");
     } finally {
       setIsSubmitting(false);
     }
@@ -71,51 +75,83 @@ export function DadosPessoaisCard({
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>{title}</h1>
+      {/* CABEÇALHO FLEXÍVEL: Título + Botão Fechar (se existir) */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1rem",
+        }}
+      >
+        <h1 className={styles.title} style={{ marginBottom: 0 }}>
+          {title}
+        </h1>
+
+        {onRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#94a3b8",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              transition: "color 0.2s",
+            }}
+            title="Remover esta seção"
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")} // Fica vermelho ao passar mouse
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
+          >
+            <X size={24} />
+          </button>
+        )}
+      </div>
 
       <form className={styles.card} onSubmit={handleSubmit(onSubmit)}>
+        {/* ... (Todo o resto do formulário continua IGUAL) ... */}
+
         <div className={styles.fullWidth}>
           <Input
-            label="Nome"
+            label="Nome Completo"
             placeholder="Nome Completo"
-            error={errors.nomeCompleto?.message}
-            {...register("nomeCompleto", { required: "O Nome é obrigatório" })}
+            error={errors[`${prefixo}nome`]?.message as string}
+            {...register(`${prefixo}nome`, { required: "Nome é obrigatório" })}
           />
         </div>
 
         <div className={styles.fullWidth}>
-          {/* 3. APLICAÇÃO DA MÁSCARA DE CPF */}
           <Input
             label="CPF"
             placeholder="000.000.000-00"
-            maxLength={14} // Limita o tamanho visual
-            error={errors.cpf?.message}
-            {...register("cpf", {
-              required: "O CPF é obrigatório",
-              onChange: (e) => {
-                // Pega o valor, aplica a máscara e devolve pro input
-                e.target.value = maskCPF(e.target.value);
-              },
+            maxLength={14}
+            error={errors[`${prefixo}cpf`]?.message as string}
+            {...register(`${prefixo}cpf`, {
+              onChange: (e) => (e.target.value = maskCPF(e.target.value)),
             })}
           />
         </div>
 
-        <div className={styles.fullWidth}>
-          <Input
-            label="E-mail"
-            type="email"
-            placeholder="exemplo@email.com"
-            error={errors.email?.message}
-            {...register("email")}
-          />
-        </div>
+        {!prefixo && (
+          <div className={styles.fullWidth}>
+            <Input
+              label="E-mail"
+              type="email"
+              disabled={true}
+              {...register(`${prefixo}email`)}
+            />
+          </div>
+        )}
 
         <div>
           <Input
             label="Data de nascimento"
             type="date"
-            error={errors.dataNascimento?.message}
-            {...register("dataNascimento")}
+            error={errors[`${prefixo}data_nascimento`]?.message as string}
+            {...register(`${prefixo}data_nascimento`)}
           />
         </div>
 
@@ -123,35 +159,37 @@ export function DadosPessoaisCard({
           <Input
             label="Expectativa de vida"
             type="number"
-            placeholder="Ex: 100"
-            error={errors.expectativaVida?.message}
-            {...register("expectativaVida")}
+            placeholder="Ex: 90"
+            {...register(`${prefixo}expectativa_vida`)}
           />
         </div>
 
         <div className={styles.fullWidth}>
-          {/* 4. APLICAÇÃO DA MÁSCARA DE TELEFONE */}
           <Input
-            label="Telefone"
+            label="Telefone / Celular"
             placeholder="(00) 00000-0000"
             maxLength={15}
-            error={errors.telefone?.message}
-            {...register("telefone", {
-              onChange: (e) => {
-                e.target.value = maskPhone(e.target.value);
-              },
+            {...register(`${prefixo}telefone`, {
+              onChange: (e) => (e.target.value = maskPhone(e.target.value)),
             })}
           />
         </div>
 
-        <div className={styles.fullWidth}>
-          <button
+        <div
+          className={styles.fullWidth}
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginTop: "1rem",
+          }}
+        >
+          <Button
             type="submit"
-            className={styles.saveButton}
-            disabled={isSubmitting}
+            loading={isSubmitting}
+            icon={<Save size={18} />}
           >
-            {isSubmitting ? "Salvando..." : "Salvar"}
-          </button>
+            Salvar Dados
+          </Button>
         </div>
       </form>
     </div>

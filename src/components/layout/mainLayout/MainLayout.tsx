@@ -1,22 +1,33 @@
 // src/components/layout/MainLayout.tsx
 
+import { useState } from "react"; // <--- Importe useState
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "../sidebar/Sidebar";
-import { Navbar } from "../navbar/Navbar"; // <--- Import Atualizado
+
 import styles from "./MainLayout.module.css";
+import { Navbar } from "../navbar/Navbar";
 
 export function MainLayout() {
+  const [isCollapsed, setIsCollapsed] = useState(false); // Estado agora vive aqui
+
   return (
     <div className={styles.layout}>
-      {/* Sidebar Fixa à Esquerda */}
-      <Sidebar />
+      {/* Sidebar recebe o controle */}
+      <Sidebar
+        isCollapsed={isCollapsed}
+        toggleSidebar={() => setIsCollapsed(!isCollapsed)}
+      />
 
-      {/* Área Principal (Conteúdo + Navbar) */}
-      <div className={styles.contentWrapper}>
-        {/* Navbar Fixa no Topo */}
+      {/* Aplicamos uma classe dinâmica no wrapper 
+         para ele saber se deve ter margem grande (260px) ou pequena (80px)
+      */}
+      <div
+        className={`${styles.contentWrapper} ${
+          isCollapsed ? styles.collapsed : ""
+        }`}
+      >
         <Navbar />
 
-        {/* Conteúdo da Página que rola */}
         <main className={styles.content}>
           <Outlet />
         </main>

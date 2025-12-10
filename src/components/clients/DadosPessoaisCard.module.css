@@ -1,49 +1,36 @@
-/* src/components/forms/DadosPessoaisForm.module.css */
-
 .container {
-  margin: 0 auto 2rem auto; /* Centraliza e dá um espaçamento inferior para separação */
-  padding: 0; /* Remove o padding do container externo, o card já tem */
-  font-family: sans-serif;
+  font-family: inherit;
+  margin-bottom: 2rem;
 }
 
 .title {
-  color: #2c80ff; /* Azul similar ao da imagem */
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
+  color: #2563eb; /* Azul padrão */
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
 }
 
 .card {
-  background-color: #fff;
-  border: 1px solid #e0e0e0; /* Borda cinza suave */
-  border-radius: 8px; /* Cantos arredondados */
-  padding: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); /* Sombra muito leve */
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
+  /* GRID SYSTEM */
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem; /* Espaço entre os inputs */
+  grid-template-columns: 1fr 1fr; /* 2 Colunas iguais */
+  gap: 1.5rem; /* Espaço entre campos */
 }
 
+/* Campos que devem ocupar a linha inteira (Nome, Botão) */
 .fullWidth {
-  grid-column: span 2; /* Ocupa as 2 colunas */
+  grid-column: 1 / -1; /* Ocupa do começo ao fim */
 }
 
-/* Estilo do Botão Salvar (dentro do card) */
-.saveButton {
-  background-color: #004d40; /* Verde escuro (Teal) */
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.75rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  width: fit-content; /* O botão ocupa apenas o espaço do texto */
-  margin-top: 1rem; /* Espaçamento da parte de cima */
-  transition: background-color 0.2s ease;
-}
-
-.saveButton:hover {
-  background-color: #00382e;
+/* Responsividade: No celular vira uma coluna só */
+@media (max-width: 640px) {
+  .card {
+    grid-template-columns: 1fr;
+  }
 }
