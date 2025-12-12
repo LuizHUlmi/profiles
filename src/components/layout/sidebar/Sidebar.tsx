@@ -12,8 +12,10 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCog,
+  Scale,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
+import { ArrowLeftRight } from "lucide-react"; // Sugestão de ícone
 
 // Definimos o que a Sidebar espera receber do Pai
 interface SidebarProps {
@@ -43,20 +45,6 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
       </div>
 
       <nav className={styles.nav}>
-        <NavLink
-          to={userId ? `/dashboard/${userId}` : "/"}
-          className={({ isActive }) =>
-            `${styles.navItem} ${isActive ? styles.active : ""}`
-          }
-          title="Dashboard"
-          end
-        >
-          <div className={styles.iconContainer}>
-            <LayoutDashboard size={22} />
-          </div>
-          {!isCollapsed && <span>Dashboard</span>}
-        </NavLink>
-
         {userId &&
           (profile?.role === "master" || profile?.role === "consultor") && (
             <NavLink
@@ -73,22 +61,60 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
             </NavLink>
           )}
 
+        <NavLink
+          to="/perfil"
+          className={({ isActive }) =>
+            `${styles.navItem} ${isActive ? styles.active : ""}`
+          }
+          title="Minha Conta"
+          end
+        >
+          <div className={styles.iconContainer}>
+            <UserCircle size={22} />
+          </div>
+          {!isCollapsed && <span>Minha Conta</span>}
+        </NavLink>
+
         {!isCollapsed && <div className={styles.divider}></div>}
 
-        {(profile?.role === "master" || profile?.role === "consultor") && (
-          <NavLink
-            to="/cliente"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.active : ""}`
-            }
-            title="Carteira de Clientes"
-          >
-            <div className={styles.iconContainer}>
-              <Users size={22} />
-            </div>
-            {!isCollapsed && <span>Clientes</span>}
-          </NavLink>
-        )}
+        <NavLink
+          to="/ativos-passivos"
+          className={({ isActive }) =>
+            `${styles.navItem} ${isActive ? styles.active : ""}`
+          }
+        >
+          <div className={styles.iconContainer}>
+            <Scale size={22} />
+          </div>
+          {!isCollapsed && <span>Ativos e Passivos</span>}
+        </NavLink>
+
+        <NavLink
+          to="/entradas-saidas"
+          className={({ isActive }) =>
+            `${styles.navItem} ${isActive ? styles.active : ""}`
+          }
+          title="Entradas e Saídas"
+        >
+          <div className={styles.iconContainer}>
+            <ArrowLeftRight size={22} />
+          </div>
+          {!isCollapsed && <span>Entradas e Saídas</span>}
+        </NavLink>
+
+        <NavLink
+          to={userId ? `/dashboard/${userId}` : "/"}
+          className={({ isActive }) =>
+            `${styles.navItem} ${isActive ? styles.active : ""}`
+          }
+          title="Dashboard"
+          end
+        >
+          <div className={styles.iconContainer}>
+            <LayoutDashboard size={22} />
+          </div>
+          {!isCollapsed && <span>Dashboard</span>}
+        </NavLink>
 
         {profile?.role === "master" && (
           <NavLink
@@ -105,19 +131,20 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
           </NavLink>
         )}
 
-        <NavLink
-          to="/perfil"
-          className={({ isActive }) =>
-            `${styles.navItem} ${isActive ? styles.active : ""}`
-          }
-          title="Minha Conta"
-          end
-        >
-          <div className={styles.iconContainer}>
-            <UserCircle size={22} />
-          </div>
-          {!isCollapsed && <span>Minha Conta</span>}
-        </NavLink>
+        {(profile?.role === "master" || profile?.role === "consultor") && (
+          <NavLink
+            to="/cliente"
+            className={({ isActive }) =>
+              `${styles.navItem} ${isActive ? styles.active : ""}`
+            }
+            title="Carteira de Clientes"
+          >
+            <div className={styles.iconContainer}>
+              <Users size={22} />
+            </div>
+            {!isCollapsed && <span>Clientes</span>}
+          </NavLink>
+        )}
       </nav>
 
       <div className={styles.footer}>

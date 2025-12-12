@@ -1,41 +1,40 @@
+// src/pages/Perfil.tsx
+
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useActiveClient } from "../context/ActiveClientContext";
 
-import { UserPlus } from "lucide-react";
+// Remover UserPlus pois o botão antigo "Adicionar Cônjuge" vai sair
+// import { UserPlus } from "lucide-react";
 
-// Estilos
 import styles from "./perfil.module.css";
 import { useToast } from "../components/ui/toast/ToastContext";
 import { DadosPessoaisCard } from "../components/clients/DadosPessoaisCard";
-import { Button } from "../components/ui/button/Button";
+// import { Button } from "../components/ui/button/Button"; // Pode remover se não for usar em outro lugar
 import { EnderecoPessoal } from "../components/clients/EnderecoPessoal";
+import { FamiliaSection } from "../components/clients/FamiliaSection"; // Nossa nova seção
 
 export function Perfil() {
-  const { profile } = useAuth(); // Usuário logado
-  const { activeClientId } = useActiveClient(); // Cliente selecionado na Navbar
+  const { profile } = useAuth();
+  const { activeClientId } = useActiveClient();
   const toast = useToast();
 
   const [loadingData, setLoadingData] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [profileData, setProfileData] = useState<any>(null);
 
-  // Controles de Visualização
-  const [isClient, setIsClient] = useState(false); // É cliente ou consultor?
-  const [mostrarConjuge, setMostrarConjuge] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  // Define quem será editado (Prioridade: Cliente Selecionado > Usuário Logado)
+  // REMOVIDO: const [mostrarConjuge, setMostrarConjuge] = useState(false); <--- Não precisamos mais disso
+
   const targetId = activeClientId || profile?.id;
 
-  // --- CARREGAMENTO DE DADOS ---
   useEffect(() => {
     async function loadData() {
       if (!targetId) return;
       setLoadingData(true);
-
       try {
-        // 1. Tenta buscar na tabela de CLIENTES (perfis)
         const { data: cliente } = await supabase
           .from("perfis")
           .select("*")
@@ -45,14 +44,8 @@ export function Perfil() {
         if (cliente) {
           setProfileData(cliente);
           setIsClient(true);
-
-          // Verifica se já existem dados de cônjuge salvos para abrir o card automaticamente
-          // Checamos se tem nome ou CPF do cônjuge preenchido
-          if (cliente.conjuge_nome || cliente.conjuge_cpf) {
-            setMostrarConjuge(true);
-          }
+          // REMOVIDO: Lógica de checar conjuge_nome
         } else {
-          // 2. Se não achou, busca na tabela de CONSULTORES
           const { data: consultor } = await supabase
             .from("consultores")
             .select("*")
@@ -65,80 +58,58 @@ export function Perfil() {
           }
         }
       } catch (error) {
-        console.error("Erro ao carregar perfil:", error);
-        toast.error("Erro ao carregar dados do perfil.");
+        console.error("Erro perfil:", error);
+        toast.error("Erro ao carregar dados.");
       } finally {
         setLoadingData(false);
       }
     }
-
     loadData();
   }, [targetId, toast]);
 
-  // --- RENDERIZAÇÃO ---
-
-  if (loadingData) {
+  if (loadingData)
     return (
       <div className={styles.loadingContainer}>
-        <p>Carregando perfil...</p>
+        <p>Carregando...</p>
       </div>
     );
-  }
-
-  if (!targetId || !profileData) {
+  if (!targetId || !profileData)
     return (
       <div className={styles.loadingContainer}>
         <p>Perfil não encontrado.</p>
       </div>
     );
-  }
 
   return (
     <div className={styles.container}>
-      {/* --- ÁREA FLEXÍVEL: DADOS PESSOAIS --- */}
-      {/* Esta div agrupa Titular e Cônjuge para ficarem lado a lado se couber */}
+      {/* 1. DADOS DO TITULAR (Unica coluna agora, ou full width) */}
       <div className={styles.rowContainer}>
-        {/* 1. Card do Titular (Sempre Visível) */}
         <div className={styles.cardWrapper}>
           <DadosPessoaisCard
             title={isClient ? "Meus Dados" : "Dados do Consultor"}
             targetId={targetId}
             initialData={profileData}
             isClient={isClient}
-            prefixo="" // Salva em: nome, cpf, data_nascimento...
+            prefixo=""
           />
         </div>
 
-        {/* 2. Card do Cônjuge (Condicional) */}
-        {isClient && mostrarConjuge && (
-          <div className={styles.cardWrapper}>
-            <DadosPessoaisCard
-              title="Dados do Cônjuge"
-              targetId={targetId}
-              initialData={profileData}
-              isClient={true}
-              prefixo="conjuge_"
-              // AQUI ESTÁ A MÁGICA:
-              onRemove={() => setMostrarConjuge(false)}
-            />
-          </div>
-        )}
+        {/* REMOVIDO: Card do Cônjuge antigo */}
       </div>
 
-      {/* --- BOTÃO ADICIONAR CÔNJUGE --- */}
-      {isClient && !mostrarConjuge && (
-        <div className={styles.addButtonContainer}>
-          <Button
-            variant="outline"
-            onClick={() => setMostrarConjuge(true)}
-            icon={<UserPlus size={18} />}
-          >
-            Adicionar Cônjuge
-          </Button>
+      {/* REMOVIDO: Botão Adicionar Cônjuge antigo */}
+
+      {/* 2. NOVA SEÇÃO FAMÍLIA (Onde o Cônjuge vai aparecer agora) */}
+      {isClient && (
+        <div
+          className={styles.fullWidthSection}
+          style={{ marginBottom: "2rem" }}
+        >
+          <FamiliaSection profileId={targetId} />
         </div>
       )}
 
-      {/* --- ENDEREÇO (Ocupa largura total) --- */}
+      {/* 3. ENDEREÇO */}
       {isClient && (
         <div className={styles.fullWidthSection}>
           <EnderecoPessoal

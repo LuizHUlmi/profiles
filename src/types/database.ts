@@ -89,3 +89,40 @@ export interface Projeto {
   valor: number;
   prazo: string;
 }
+
+export interface Familiar {
+  id: number;
+  perfil_id: string;
+  nome: string;
+  data_nascimento: string;
+  parentesco: "Cônjuge" | "Filho" | "Pais" | "Animal" | "Outros"; // Adicionado Cônjuge
+  cpf?: string; // Adicionado opcional
+}
+
+export interface ItemFluxoCaixa {
+  id: number;
+  perfil_id: string;
+  familiar_id: number | null; // Nulo se for Titular, Casal ou Família
+  proprietario_tipo: "titular" | "dependente" | "casal" | "familia"; // <--- NOVO
+  tipo: "receita" | "despesa";
+  descricao: string;
+  valor_mensal: number;
+  inicio_tipo: "ano" | "idade";
+  inicio_valor: number;
+  duracao_anos: number;
+  correcao_anual?: number | null;
+}
+
+export interface ItemAtivoPassivo {
+  id: number;
+  perfil_id: string;
+  familiar_id: number | null;
+  proprietario_tipo: "titular" | "dependente" | "casal" | "familia";
+  categoria: "ativo" | "passivo";
+  tipo: string;
+  nome: string;
+  valor: number;
+  inventariar: boolean;
+  percentual_inventario?: number | null;
+  investir_pos_morte: boolean;
+}

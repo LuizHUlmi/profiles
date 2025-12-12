@@ -11,6 +11,8 @@ import { ToastProvider } from "./components/ui/toast/ToastContext";
 import { RoleGuard } from "./context/RoleGuard";
 import { Perfil } from "./pages/Perfil";
 import { ActiveClientProvider } from "./context/ActiveClientContext";
+import { EntradasSaidas } from "./pages/EntradasSaidas";
+import { AtivosPassivos } from "./pages/AtivosPassivos";
 
 function App() {
   return (
@@ -34,6 +36,28 @@ function App() {
                     ]}
                   >
                     <Dashboard />
+                  </RoleGuard>
+                }
+              />
+
+              <Route
+                path="/entradas-saidas"
+                element={
+                  <RoleGuard
+                    allowedRoles={["master", "consultor", "cliente_editor"]}
+                  >
+                    <EntradasSaidas />
+                  </RoleGuard>
+                }
+              />
+
+              <Route
+                path="/ativos-passivos"
+                element={
+                  <RoleGuard
+                    allowedRoles={["master", "consultor", "cliente_editor"]}
+                  >
+                    <AtivosPassivos />
                   </RoleGuard>
                 }
               />
