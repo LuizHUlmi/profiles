@@ -18,7 +18,6 @@ interface DadosPessoaisCardProps {
   initialData?: any;
   prefixo?: string;
   isClient?: boolean;
-  // NOVA PROPRIEDADE OPCIONAL
   onRemove?: () => void;
 }
 
@@ -28,7 +27,7 @@ export function DadosPessoaisCard({
   initialData,
   prefixo = "",
   isClient = true,
-  onRemove, // Recebendo a função
+  onRemove,
 }: DadosPessoaisCardProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
@@ -112,8 +111,6 @@ export function DadosPessoaisCard({
       </div>
 
       <form className={styles.card} onSubmit={handleSubmit(onSubmit)}>
-        {/* ... (Todo o resto do formulário continua IGUAL) ... */}
-
         <div className={styles.fullWidth}>
           <Input
             label="Nome Completo"

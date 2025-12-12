@@ -20,7 +20,7 @@ export function useFinancialProjection({
   rendaDesejada,
   outrasRendas,
   investimentoMensal,
-  expectativaVida = 90,
+  expectativaVida = 100,
   projects = [],
   activeProjectIds = [],
 }: ProjectionParams) {
@@ -30,12 +30,12 @@ export function useFinancialProjection({
     // Normaliza para dia 1 para evitar problemas de meses curtos
     const dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
 
-    const idadeFinal = Math.max(expectativaVida, idadeAtual + 5);
+    const idadeFinal = expectativaVida;
     const anosParaSimular = idadeFinal - idadeAtual;
     const totalMeses = anosParaSimular * 12;
 
     // 2. Taxas
-    const taxaJurosAnual = 0.06;
+    const taxaJurosAnual = 0.045;
     const taxaJurosMensal = Math.pow(1 + taxaJurosAnual, 1 / 12) - 1;
 
     // 3. Arrays de Dados
@@ -110,7 +110,7 @@ export function useFinancialProjection({
         }
       });
 
-      // Travas visuais de zero (opcional, para gráfico não ficar negativo)
+      // Travas visuais de zero (opcional, para gráfico não ficar negativo) // Desenvolver um botã para optar por usar ou não essa função
       if (saldoBase < 0) saldoBase = 0;
       if (saldoReal < 0) saldoReal = 0;
 
@@ -124,7 +124,7 @@ export function useFinancialProjection({
       ages: labelsAge,
       years: labelsYear,
       dataProjected: saldoProjetado, // Linha Azul (Referência)
-      dataWithProjects: saldoComProjetosProjetado, // Linha Laranja (Real)
+      dataWithProjects: saldoComProjetosProjetado, // Linha Laranja (Com os descontos dos projetos)
     };
   }, [
     idadeAtual,

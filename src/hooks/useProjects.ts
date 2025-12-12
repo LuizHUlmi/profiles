@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import type { Projeto } from "../types/database";
-import { useToast } from "../components/ui/toast/ToastContext"; // Usando nosso Toast!
+import { useToast } from "../components/ui/toast/ToastContext";
 
 export function useProjects() {
   const [projects, setProjects] = useState<Projeto[]>([]);
@@ -14,7 +14,7 @@ export function useProjects() {
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from("projetos")
+          .from("projetos") // Nome da Tabela
           .select("*")
           .eq("perfil_id", userId) // Filtra pelo dono
           .order("id", { ascending: true });

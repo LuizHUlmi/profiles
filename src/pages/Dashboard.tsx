@@ -40,6 +40,7 @@ export function Dashboard() {
   const [activeProjectIds, setActiveProjectIds] = useState<number[]>([]);
 
   // --- SLIDERS & DADOS VITAIS ---
+  const [expectativaVida, setExpectativaVida] = useState(100); // Valor padrão inicial
   const [idadeAtual, setIdadeAtual] = useState(30);
   const [idadeCalculada, setIdadeCalculada] = useState(false);
 
@@ -53,6 +54,7 @@ export function Dashboard() {
   const { ages, years, dataProjected, dataWithProjects } =
     useFinancialProjection({
       idadeAtual,
+      expectativaVida,
       patrimonioAtual,
       idadeAposentadoria,
       rendaDesejada,
@@ -83,7 +85,7 @@ export function Dashboard() {
       // 1. BUSCAR DATA DE NASCIMENTO (PERFIL)
       const { data: perfil } = await supabase
         .from("perfis")
-        .select("data_nascimento")
+        .select("data_nascimento, expectativa_vida")
         .eq("id", clientId)
         .single();
 
@@ -97,6 +99,12 @@ export function Dashboard() {
         }
       } else {
         setIdadeCalculada(false);
+      }
+
+      if (perfil?.expectativa_vida) {
+        setExpectativaVida(perfil.expectativa_vida);
+      } else {
+        setExpectativaVida(100);
       }
 
       // 2. BUSCAR SIMULAÇÃO

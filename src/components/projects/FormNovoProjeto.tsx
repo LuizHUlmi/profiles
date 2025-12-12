@@ -104,7 +104,7 @@ export function FormNovoProjeto({
             ? `${data.repeticao} - ${data.qtdRepeticoes}x`
             : "À vista",
         perfil_id: ownerId,
-        idade_realizacao: idadeRealizacaoNum, // Salva no banco
+        idade_realizacao: idadeRealizacaoNum,
       };
 
       if (projectToEdit) {

@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import styles from "./EnderecoPessoal.module.css";
 import { maskCEP, unmask } from "../../utils/masks";
 
-import { Save } from "lucide-react"; // <--- Ícone
+import { Save } from "lucide-react";
 import { useToast } from "../ui/toast/ToastContext";
 import { Input } from "../ui/input/input";
 import { Button } from "../ui/button/Button";
