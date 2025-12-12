@@ -126,3 +126,18 @@ export interface ItemAtivoPassivo {
   percentual_inventario?: number | null;
   investir_pos_morte: boolean;
 }
+
+export type CategoriaPatrimonio =
+  | "investimento"
+  | "previdencia"
+  | "imobilizado"
+  | "passivo";
+
+export interface ItemPatrimonio {
+  id: number;
+  perfil_id: string; // Dono do ativo/passivo
+  nome: string;
+  valor: number;
+  categoria: CategoriaPatrimonio;
+  detalhes?: string; // Ex: Instituição, Endereço, Taxa (vamos expandir depois)
+}
