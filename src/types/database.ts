@@ -113,6 +113,8 @@ export interface ItemFluxoCaixa {
   correcao_anual?: number | null;
 }
 
+// src/types/database.ts
+
 export interface ItemAtivoPassivo {
   id: number;
   perfil_id: string;
@@ -122,9 +124,25 @@ export interface ItemAtivoPassivo {
   tipo: string;
   nome: string;
   valor: number;
+
+  // Campos de Herança
   inventariar: boolean;
   percentual_inventario?: number | null;
   investir_pos_morte: boolean;
+
+  // Campos de Investimento
+  rentabilidade_tipo?: "cdi" | "bruta" | "ipca" | null;
+  rentabilidade_valor?: number | null;
+
+  // Campo de Previdência
+  regime_tributario?: "progressivo" | "regressivo" | null;
+
+  // NOVOS CAMPOS (Passivos)
+  valor_parcela?: number | null;
+  prazo_meses?: number | null;
+  amortizacao_tipo?: "SAC" | "PRICE" | null;
+  correcao_anual?: number | null;
+  segurado?: boolean | null;
 }
 
 export type CategoriaPatrimonio =
@@ -140,4 +158,29 @@ export interface ItemPatrimonio {
   valor: number;
   categoria: CategoriaPatrimonio;
   detalhes?: string; // Ex: Instituição, Endereço, Taxa (vamos expandir depois)
+}
+
+export interface ItemSeguro {
+  id: number;
+  perfil_id: string;
+  proprietario_tipo: "titular" | "dependente" | "conjuge";
+  familiar_id: number | null;
+  nome: string;
+  cobertura: number;
+  valor_mensal?: number | null;
+  tipo_cobertura?: string;
+  tipo_vigencia?: "vitalicio" | "termo";
+  prazo_anos?: number | null;
+}
+
+export interface ItemEducacao {
+  id: number;
+  perfil_id: string;
+  beneficiario_tipo: "titular" | "dependente";
+  familiar_id: number | null;
+  nome: string;
+  custo_mensal: number;
+  correcao_anual?: number | null;
+  ano_inicio: number;
+  duracao_anos: number;
 }

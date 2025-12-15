@@ -1,0 +1,62 @@
+/* src/components/ui/tooltip/InfoTooltip.module.css */
+
+.container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  cursor: help;
+  vertical-align: middle;
+}
+
+.icon {
+  color: #94a3b8; /* Cinza suave */
+  transition: color 0.2s;
+}
+
+.container:hover .icon {
+  color: #0ea5e9; /* Azul ao passar o mouse */
+}
+
+.tooltip {
+  visibility: hidden;
+  opacity: 0;
+  width: 220px;
+  background-color: #1e293b; /* Fundo escuro */
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+
+  /* Posicionamento */
+  position: absolute;
+  z-index: 50; /* Garante que fique acima de tudo */
+  bottom: 125%; /* Acima do ícone */
+  left: 50%;
+  transform: translateX(-50%);
+
+  /* Animação */
+  transition: opacity 0.3s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* A setinha embaixo do balão */
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #1e293b transparent transparent transparent;
+}
+
+.container:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}

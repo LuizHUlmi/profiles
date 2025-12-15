@@ -13,6 +13,8 @@ import { Perfil } from "./pages/Perfil";
 import { ActiveClientProvider } from "./context/ActiveClientContext";
 import { EntradasSaidas } from "./pages/EntradasSaidas";
 import { AtivosPassivos } from "./pages/AtivosPassivos";
+import { Protecao } from "./pages/Protecao"; // <--- IMPORT NOVO
+import { Educacao } from "./pages/Educacao";
 
 function App() {
   return (
@@ -23,7 +25,8 @@ function App() {
             <Route path="/login" element={<Login />} />
 
             <Route element={<MainLayout />}>
-              {/* Rota Padrão (Para o Cliente ver o próprio) */}
+              {/* ... outras rotas ... */}
+
               <Route
                 path="/"
                 element={
@@ -62,7 +65,20 @@ function App() {
                 }
               />
 
-              {/* NOVA ROTA: Dashboard Visualizando um Cliente Específico */}
+              {/* === NOVA ROTA AQUI === */}
+              <Route
+                path="/protecao"
+                element={
+                  <RoleGuard
+                    allowedRoles={["master", "consultor", "cliente_editor"]}
+                  >
+                    <Protecao />
+                  </RoleGuard>
+                }
+              />
+              {/* ====================== */}
+
+              {/* ... resto das rotas (dashboard/:userId, cliente, equipe, etc) ... */}
               <Route
                 path="/dashboard/:userId"
                 element={
@@ -72,12 +88,22 @@ function App() {
                 }
               />
 
-              {/* ... rotas de clientes e equipe ... */}
               <Route
                 path="/cliente"
                 element={
                   <RoleGuard allowedRoles={["master", "consultor"]}>
                     <Clientes />
+                  </RoleGuard>
+                }
+              />
+
+              <Route
+                path="/educacao"
+                element={
+                  <RoleGuard
+                    allowedRoles={["master", "consultor", "cliente_editor"]}
+                  >
+                    <Educacao />
                   </RoleGuard>
                 }
               />

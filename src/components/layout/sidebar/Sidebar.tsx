@@ -1,7 +1,6 @@
-// src/components/sidebar/Sidebar.tsx
+// src/components/layout/sidebar/Sidebar.tsx
 
 import { NavLink, useParams } from "react-router-dom";
-
 import styles from "./Sidebar.module.css";
 import {
   LayoutDashboard,
@@ -13,11 +12,12 @@ import {
   ChevronRight,
   UserCog,
   Scale,
+  ArrowLeftRight,
+  ShieldCheck,
+  GraduationCap, // <--- Import Novo
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
-import { ArrowLeftRight } from "lucide-react"; // Sugestão de ícone
 
-// Definimos o que a Sidebar espera receber do Pai
 interface SidebarProps {
   isCollapsed: boolean;
   toggleSidebar: () => void;
@@ -26,8 +26,6 @@ interface SidebarProps {
 export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
   const { signOut, profile } = useAuth();
   const { userId } = useParams();
-
-  // Removemos o useState interno. Agora usamos as props isCollapsed e toggleSidebar
 
   return (
     <aside
@@ -45,6 +43,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
       </div>
 
       <nav className={styles.nav}>
+        {/* ... Itens de Perfil ... */}
         {userId &&
           (profile?.role === "master" || profile?.role === "consultor") && (
             <NavLink
@@ -82,11 +81,40 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
           className={({ isActive }) =>
             `${styles.navItem} ${isActive ? styles.active : ""}`
           }
+          title="Ativos e Passivos"
         >
           <div className={styles.iconContainer}>
             <Scale size={22} />
           </div>
           {!isCollapsed && <span>Ativos e Passivos</span>}
+        </NavLink>
+
+        {/* === LINK NOVO === */}
+        <NavLink
+          to="/protecao"
+          className={({ isActive }) =>
+            `${styles.navItem} ${isActive ? styles.active : ""}`
+          }
+          title="Proteção e Seguros"
+        >
+          <div className={styles.iconContainer}>
+            <ShieldCheck size={22} />
+          </div>
+          {!isCollapsed && <span>Proteção</span>}
+        </NavLink>
+        {/* ================= */}
+
+        <NavLink
+          to="/educacao"
+          className={({ isActive }) =>
+            `${styles.navItem} ${isActive ? styles.active : ""}`
+          }
+          title="Educação"
+        >
+          <div className={styles.iconContainer}>
+            <GraduationCap size={22} />
+          </div>
+          {!isCollapsed && <span>Educação</span>}
         </NavLink>
 
         <NavLink
@@ -116,6 +144,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
           {!isCollapsed && <span>Dashboard</span>}
         </NavLink>
 
+        {/* ... Resto do menu (Equipe, Clientes) ... */}
         {profile?.role === "master" && (
           <NavLink
             to="/equipe"
