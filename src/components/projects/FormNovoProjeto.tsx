@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
 import styles from "./FormNovoProjeto.module.css";
-import { Input } from "../ui/input/input";
+import { Input } from "../ui/input/Input";
 import { Button } from "../ui/button/Button";
 import { maskCurrency, unmaskCurrency } from "../../utils/masks";
 import type { Projeto } from "../../types/database";

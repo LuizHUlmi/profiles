@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
-import { Input } from "../ui/input/input";
+import { Input } from "../ui/input/Input";
 import { Button } from "../ui/button/Button";
 import { Save, Clock, Infinity as InfinityIcon } from "lucide-react";
 import { maskCurrency, unmaskCurrency } from "../../utils/masks";

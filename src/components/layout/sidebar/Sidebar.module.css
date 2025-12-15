@@ -1,4 +1,4 @@
-/* src/components/sidebar/Sidebar.module.css */
+/* src/components/layout/sidebar/Sidebar.module.css */
 
 .sidebar {
   width: 260px; /* Largura aberta */
@@ -11,12 +11,12 @@
   left: 0;
   top: 0;
   z-index: 50;
-  transition: width 0.3s ease; /* Animação suave */
+  transition: all 0.3s ease; /* Transição suave para largura e posição */
 }
 
 /* Estado Colapsado */
 .sidebar.collapsed {
-  width: 80px; /* Largura fechada */
+  width: 80px;
 }
 
 /* Header */
@@ -40,7 +40,7 @@
   color: var(--primary);
   margin: 0;
   letter-spacing: -0.5px;
-  white-space: nowrap; /* Impede quebra */
+  white-space: nowrap;
 }
 
 .toggleButton {
@@ -82,12 +82,12 @@
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s;
-  white-space: nowrap; /* Impede texto de quebrar linha */
-  height: 48px; /* Altura fixa para alinhar bem */
+  white-space: nowrap;
+  height: 48px;
 }
 
 .collapsed .navItem {
-  justify-content: center; /* Centraliza ícone quando fechado */
+  justify-content: center;
   padding: 0.75rem 0;
 }
 
@@ -102,7 +102,6 @@
   font-weight: 600;
 }
 
-/* Container do ícone para garantir alinhamento */
 .iconContainer {
   display: flex;
   align-items: center;
@@ -195,4 +194,26 @@
 .logoutButton:hover {
   color: var(--danger);
   background-color: #fee2e2;
+}
+
+/* --- MOBILE (Telas menores que 768px) --- */
+@media (max-width: 768px) {
+  .sidebar {
+    /* No mobile, a sidebar aberta ocupa quase toda a tela ou largura fixa, mas flutuando */
+    width: 260px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    /* Quando fechada no mobile, ela some completamente para dar espaço */
+    transform: translateX(0);
+  }
+
+  /* Estado Colapsado no Mobile = Escondido fora da tela */
+  .sidebar.collapsed {
+    width: 260px; /* Mantém largura */
+    transform: translateX(-100%); /* Joga para fora da tela */
+  }
+
+  /* Ajuste do botão de toggle para mobile se necessário */
+  .header {
+    padding-right: 10px;
+  }
 }

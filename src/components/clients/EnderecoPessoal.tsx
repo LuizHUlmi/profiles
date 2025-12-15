@@ -7,7 +7,7 @@ import { maskCEP, unmask } from "../../utils/masks";
 
 import { Save } from "lucide-react";
 import { useToast } from "../ui/toast/ToastContext";
-import { Input } from "../ui/input/input";
+import { Input } from "../ui/input/Input";
 import { Button } from "../ui/button/Button";
 
 interface EnderecoPessoalProps {

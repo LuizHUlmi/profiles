@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { Input } from "../components/ui/input/input";
+import { Input } from "../components/ui/input/Input";
 import { Button } from "../components/ui/button/Button"; // Importando o novo botão inteligente
 import styles from "./Login.module.css";
 import { useToast } from "../components/ui/toast/ToastContext";

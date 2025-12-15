@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 
 import { Plus, Copy } from "lucide-react";
-import { Input } from "../../ui/input/input";
+import { Input } from "../../ui/input/Input";
 import { Button } from "../../ui/button/Button";
 import { useToast } from "../../ui/toast/ToastContext";
 

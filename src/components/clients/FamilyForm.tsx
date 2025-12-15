@@ -1,7 +1,7 @@
 // src/components/clients/FamilyForm.tsx
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Input } from "../ui/input/input";
+import { Input } from "../ui/input/Input";
 import { Button } from "../ui/button/Button";
 import { Save } from "lucide-react";
 import { maskCPF, unmask } from "../../utils/masks"; // Importando máscara

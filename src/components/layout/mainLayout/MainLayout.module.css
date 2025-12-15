@@ -4,7 +4,7 @@
   display: flex;
   min-height: 100vh;
   width: 100vw;
-  /* overflow: hidden; -> Remova isso se causar problemas de scroll */
+  overflow-x: hidden; /* Evita scroll horizontal indesejado */
 }
 
 /* O Wrapper engloba a Navbar e o Conteúdo Principal */
@@ -15,20 +15,57 @@
   height: 100vh;
   background-color: var(--bg-page);
 
-  /* A LÓGICA DE EMPURRAR: */
-  margin-left: 260px; /* Largura padrão da sidebar aberta */
-  transition: margin-left 0.3s ease; /* Mesma velocidade da sidebar */
-  width: calc(100% - 260px); /* Garante que não estoure a tela */
+  /* DESKTOP (Padrão) */
+  margin-left: 260px; /* Espaço da sidebar aberta */
+  width: calc(100% - 260px);
+  transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
-/* Quando a sidebar estiver fechada */
+/* Quando a sidebar estiver fechada (Desktop) */
 .contentWrapper.collapsed {
-  margin-left: 80px; /* Largura da sidebar fechada */
+  margin-left: 80px;
   width: calc(100% - 80px);
 }
 
 .content {
   flex: 1;
   padding: 2rem;
-  overflow-y: auto; /* Scroll apenas no conteúdo, não na página toda */
+  overflow-y: auto;
+}
+
+/* --- MOBILE (Responsividade) --- */
+@media (max-width: 768px) {
+  /* No mobile, o conteúdo SEMPRE ocupa a tela toda (margin-left 0).
+     A sidebar vai abrir "por cima" (overlay) ou empurrar canvas off-screen se preferir.
+     Aqui vamos usar o estilo "Overlay/Gaveta" onde o conteúdo fica fixo no lugar. */
+
+  .contentWrapper {
+    margin-left: 0 !important; /* Força margem zero */
+    width: 100% !important; /* Força largura total */
+  }
+
+  /* Nota: Como a sidebar mobile usa 'transform: translateX(-100%)' quando fechada,
+     ela não ocupa espaço no fluxo. Quando aberta, ela fica por cima.
+     Para evitar que o botão de abrir suma, precisamos garantir que a Navbar
+     tenha um botão de "Menu" visível ou que a Sidebar tenha um "puxador".
+     
+     No seu layout atual, o botão de toggle está DENTRO da Sidebar.
+     Se a Sidebar sumir (-100%), o botão some junto!
+     
+     CORREÇÃO RÁPIDA: No mobile, vamos deixar a sidebar colapsada como uma 
+     barra inferior ou um botão flutuante?
+     
+     MELHOR SOLUÇÃO PARA SEU CÓDIGO ATUAL:
+     Vamos manter a sidebar visível mas pequena (80px) em tablets,
+     e em celulares muito pequenos (<480px), talvez esconder.
+     
+     Mas para simplificar e manter seu código 'MainLayout.tsx' sem alterações de lógica JS:
+     Vamos fazer a Sidebar MOBILE Fechada ter width 0 mas um botão flutuante visível?
+     Não, vamos manter o comportamento Desktop-like por enquanto, mas ajustado:
+  */
+
+  /* Ajuste fino: No mobile, padding menor */
+  .content {
+    padding: 1rem;
+  }
 }

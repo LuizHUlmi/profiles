@@ -2,6 +2,15 @@
 
 import ReactECharts from "echarts-for-react";
 
+// Definição de tipo auxiliar para o parâmetro do ECharts
+type EChartsParam = {
+  axisValue: string;
+  color: string;
+  seriesName: string;
+  value: number;
+  dataIndex: number;
+};
+
 type FinancialChartProps = {
   ages: number[];
   years: (string | number)[];
@@ -40,14 +49,17 @@ export function FinancialChart({
       borderColor: colors.grid,
       borderWidth: 1,
       textStyle: { color: colors.text },
+      // Tipagem aplicada aqui
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      formatter: function (params: any[]) {
+      formatter: function (params: EChartsParam[] | any) {
+        if (!Array.isArray(params)) return "";
         const index = params[0].dataIndex;
         let result = `<div style="margin-bottom: 8px; font-weight: 600; color: ${colors.textLight}">
                         ${params[0].axisValue} <span style="font-weight:normal">(${ages[index]} anos)</span>
                       </div>`;
 
-        params.forEach((item) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        params.forEach((item: any) => {
           // Formata valor monetário
           const val = new Intl.NumberFormat("pt-BR", {
             style: "currency",

@@ -3,12 +3,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
-import { Input } from "../ui/input/input";
+import { Input } from "../ui/input/Input"; // <--- Import corrigido (PascalCase)
 import { Button } from "../ui/button/Button";
 import { maskCurrency, unmaskCurrency } from "../../utils/masks";
 import { Save } from "lucide-react";
 import type { Familiar, ItemAtivoPassivo } from "../../types/database";
-import { useToast } from "../ui/toast/ToastContext"; // <--- Importando seu hook
+import { useToast } from "../ui/toast/ToastContext";
+
+// Definição do Payload para uso no onSubmit
+export type AssetLiabilityPayload = Omit<ItemAtivoPassivo, "id" | "perfil_id">;
 
 type AssetFormData = {
   proprietario_select: string;
@@ -39,8 +42,8 @@ interface FormProps {
   initialData?: ItemAtivoPassivo | null;
   defaultType?: string;
   allowedTypes?: string[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSubmit: (data: any) => Promise<boolean>;
+  // Tipagem corrigida para evitar 'any'
+  onSubmit: (data: AssetLiabilityPayload) => Promise<boolean>;
   profileId?: string;
 }
 
@@ -75,7 +78,7 @@ export function AssetsLiabilitiesForm({
   profileId,
 }: FormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const toast = useToast(); // <--- Hook correto
+  const toast = useToast();
 
   const { register, handleSubmit, watch, setValue, reset } =
     useForm<AssetFormData>({
@@ -195,11 +198,14 @@ export function AssetsLiabilitiesForm({
   const handleFormSubmit = async (data: AssetFormData) => {
     setIsSubmitting(true);
 
-    let proprietario_tipo = "titular";
+    // CORREÇÃO: Tipagem explícita para resolver o erro do TypeScript
+    let proprietario_tipo: ItemAtivoPassivo["proprietario_tipo"] = "titular";
     let familiar_id: number | null = null;
 
     if (["titular", "casal", "familia"].includes(data.proprietario_select)) {
-      proprietario_tipo = data.proprietario_select;
+      // "Assegura" ao TS que a string é do tipo permitido
+      proprietario_tipo =
+        data.proprietario_select as ItemAtivoPassivo["proprietario_tipo"];
     } else if (data.proprietario_select.startsWith("dep_")) {
       proprietario_tipo = "dependente";
       familiar_id = Number(data.proprietario_select.replace("dep_", ""));
@@ -276,7 +282,6 @@ export function AssetsLiabilitiesForm({
           });
 
           if (!error) {
-            // USO CORRETO DO TOAST
             toast.success("Despesa mensal criada no Fluxo de Caixa!");
           } else {
             console.error("Erro insert fluxo:", error);

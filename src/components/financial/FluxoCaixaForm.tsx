@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Input } from "../ui/input/input";
+import { Input } from "../ui/input/Input";
 import { Button } from "../ui/button/Button";
 import { maskCurrency, unmaskCurrency } from "../../utils/masks";
 import { Save } from "lucide-react";

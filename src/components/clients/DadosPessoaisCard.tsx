@@ -8,7 +8,7 @@ import { maskCPF, maskPhone, unmask } from "../../utils/masks";
 // ADICIONEI O ÍCONE 'X'
 import { Save, X } from "lucide-react";
 import { useToast } from "../ui/toast/ToastContext";
-import { Input } from "../ui/input/input";
+import { Input } from "../ui/input/Input";
 import { Button } from "../ui/button/Button";
 
 interface DadosPessoaisCardProps {

@@ -29,8 +29,7 @@ export function useAssetsLiabilities(profileId: string) {
     }
   }, [profileId, toast]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const addItem = async (item: any) => {
+  const addItem = async (item: Omit<ItemAtivoPassivo, "id" | "perfil_id">) => {
     try {
       const { error } = await supabase.from("ativos_passivos").insert({
         perfil_id: profileId,
@@ -47,8 +46,8 @@ export function useAssetsLiabilities(profileId: string) {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateItem = async (id: number, item: any) => {
+  // updateItem recebe um objeto parcial (pode atualizar só o nome, ou só o valor, etc)
+  const updateItem = async (id: number, item: Partial<ItemAtivoPassivo>) => {
     try {
       const { error } = await supabase
         .from("ativos_passivos")

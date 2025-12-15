@@ -44,7 +44,9 @@ export function PatrimonioChart({ totals }: PatrimonioChartProps) {
       backgroundColor: "rgba(255, 255, 255, 0.95)",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       formatter: (params: any) => {
-        const item = params[0];
+        // Se trigger for axis, params é array. Se item, é objeto.
+        // Aqui assumimos que vem como array ou objeto com as propriedades necessárias.
+        const item = Array.isArray(params) ? params[0] : params;
         const val = new Intl.NumberFormat("pt-BR", {
           style: "currency",
           currency: "BRL",
@@ -104,8 +106,9 @@ export function PatrimonioChart({ totals }: PatrimonioChartProps) {
         label: {
           show: true,
           position: "right",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          formatter: (params: any) => currencyFormatter(params.value),
+          // Tipagem para params do label formatter
+          formatter: (params: { value: number }) =>
+            currencyFormatter(params.value),
           fontWeight: "bold",
           color: "#555",
         },

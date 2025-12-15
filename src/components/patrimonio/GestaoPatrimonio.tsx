@@ -90,8 +90,9 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (
+    data: Omit<ItemAtivoPassivo, "id" | "perfil_id">
+  ) => {
     if (itemToEdit) {
       return await updateItem(itemToEdit.id, data);
     } else {
@@ -259,7 +260,6 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
             defaultType={modalDefaultType}
             allowedTypes={modalAllowedTypes}
             onSubmit={handleFormSubmit}
-            // AQUI ESTÁ A CORREÇÃO:
             profileId={perfilId}
           />
         )}

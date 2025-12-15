@@ -2,6 +2,14 @@
 
 import ReactECharts from "echarts-for-react";
 
+// Tipo auxiliar para o ECharts
+type EChartsParam = {
+  axisValue: string;
+  color: string;
+  seriesName: string;
+  value: number;
+};
+
 type CashFlowChartProps = {
   categories: string[];
   incomes: number[];
@@ -32,11 +40,14 @@ export function CashFlowChart({
     tooltip: {
       trigger: "axis",
       backgroundColor: "rgba(255, 255, 255, 0.95)",
+      // Tipagem aplicada aqui
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      formatter: function (params: any[]) {
+      formatter: function (params: EChartsParam[] | any) {
+        if (!Array.isArray(params)) return "";
         let result = `<div style="margin-bottom:8px; font-weight:600">${params[0].axisValue}</div>`;
 
-        params.forEach((item) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        params.forEach((item: any) => {
           // Ajusta cor no tooltip
           let color = item.color;
           if (item.seriesName === "Receitas") color = colors.income;
