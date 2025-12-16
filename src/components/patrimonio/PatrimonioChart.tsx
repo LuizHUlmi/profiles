@@ -12,10 +12,6 @@ type PatrimonioChartProps = {
 };
 
 export function PatrimonioChart({ totals }: PatrimonioChartProps) {
-  const totalAtivos =
-    totals.investimento + totals.previdencia + totals.imobilizado;
-  const patrimonioLiquido = totalAtivos - totals.passivo;
-
   const currencyFormatter = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -28,8 +24,6 @@ export function PatrimonioChart({ totals }: PatrimonioChartProps) {
   const options = {
     title: {
       text: "Alocação Patrimonial",
-      // Como o PL agora tem sua própria barra, podemos remover o subtext ou mantê-lo como resumo
-      subtext: "Visão consolidada dos ativos e passivos",
       left: "0",
       textStyle: {
         fontSize: 16,
@@ -44,15 +38,12 @@ export function PatrimonioChart({ totals }: PatrimonioChartProps) {
       backgroundColor: "rgba(255, 255, 255, 0.95)",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       formatter: (params: any) => {
-        // Se trigger for axis, params é array. Se item, é objeto.
-        // Aqui assumimos que vem como array ou objeto com as propriedades necessárias.
         const item = Array.isArray(params) ? params[0] : params;
         const val = new Intl.NumberFormat("pt-BR", {
           style: "currency",
           currency: "BRL",
         }).format(item.value);
 
-        // Ajuste para o nome correto no tooltip se necessário
         return `
           <div style="font-weight:600; margin-bottom:4px">${item.name}</div>
           <div style="display:flex; align-items:center; gap:6px">
@@ -81,21 +72,15 @@ export function PatrimonioChart({ totals }: PatrimonioChartProps) {
     },
     yAxis: {
       type: "category",
-      // Adicionamos "Patrimônio Líquido" na lista de categorias
-      // A ordem no ECharts (category) é de baixo para cima (índice 0 fica embaixo)
-      data: [
-        "Patrimônio Líquido",
-        "Passivos",
-        "Imobilizado",
-        "Previdência",
-        "Investimentos", // linha do topo
-      ],
+      // REMOVIDO: "Patrimônio Líquido" da lista
+      // A ordem aqui define a ordem de baixo para cima no gráfico
+      data: ["Passivos", "Imobilizado", "Previdência", "Investimentos"],
       axisTick: { show: false },
       axisLine: { show: false },
       axisLabel: {
         fontWeight: "500",
         color: "#333",
-        fontSize: 12, // Leve ajuste para caber
+        fontSize: 12,
       },
     },
     series: [
@@ -106,38 +91,36 @@ export function PatrimonioChart({ totals }: PatrimonioChartProps) {
         label: {
           show: true,
           position: "right",
-          // Tipagem para params do label formatter
           formatter: (params: { value: number }) =>
             currencyFormatter(params.value),
-          fontWeight: "bold",
-          color: "#555",
+          fontWeight: "600",
+          color: "#64748b",
+          fontFamily: "inherit",
         },
-        // Os dados devem seguir EXATAMENTE a ordem do yAxis.data acima
         data: [
           {
-            value: patrimonioLiquido,
-            itemStyle: { color: "#4338ca" }, // Roxo/Indigo (Destaque para o PL)
-            name: "Patrimônio Líquido",
-          },
-          {
             value: totals.passivo,
-            itemStyle: { color: "#dc2626" }, // Vermelho
             name: "Passivos",
+            // Mesmo Rosé suave (#be123c) da coluna
+            itemStyle: { color: "#be123c", borderRadius: [0, 4, 4, 0] },
           },
           {
             value: totals.imobilizado,
-            itemStyle: { color: "#ca8a04" }, // Amarelo
             name: "Imobilizado",
+            // Mesmo Slate 400 (#94a3b8) da coluna
+            itemStyle: { color: "#94a3b8", borderRadius: [0, 4, 4, 0] },
           },
           {
             value: totals.previdencia,
-            itemStyle: { color: "#0ea5e9" }, // Azul Claro
             name: "Previdência",
+            // Mesmo Slate 600 (#475569) da coluna
+            itemStyle: { color: "#475569", borderRadius: [0, 4, 4, 0] },
           },
           {
             value: totals.investimento,
-            itemStyle: { color: "#16a34a" }, // Verde
             name: "Investimentos",
+            // Mesmo Slate 800 (#1e293b) da coluna
+            itemStyle: { color: "#1e293b", borderRadius: [0, 4, 4, 0] },
           },
         ],
       },
@@ -157,7 +140,8 @@ export function PatrimonioChart({ totals }: PatrimonioChartProps) {
     >
       <ReactECharts
         option={options}
-        style={{ height: "350px", width: "100%" }}
+        // Reduzi levemente a altura (de 350px para 300px) pois tem uma barra a menos
+        style={{ height: "300px", width: "100%" }}
       />
     </div>
   );

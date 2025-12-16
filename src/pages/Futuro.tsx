@@ -17,11 +17,11 @@ import { Modal } from "../components/ui/modal/Modal";
 import { FormNovoProjeto } from "../components/projects/FormNovoProjeto";
 
 import type { Projeto, Simulacao } from "../types/database";
-import styles from "./Dashboard.module.css";
+import styles from "./Futuro.module.css";
 import { useActiveClient } from "../context/ActiveClientContext";
 import { AlertCircle, Users } from "lucide-react";
 
-export function Dashboard() {
+export function Futuro() {
   const { activeClientId } = useActiveClient();
   const [searchParams] = useSearchParams();
   const toast = useToast();

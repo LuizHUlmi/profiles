@@ -2,7 +2,7 @@
 
 import { Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "./components/layout/mainLayout/MainLayout";
-import { Dashboard } from "./pages/Dashboard";
+import { Futuro } from "./pages/Futuro";
 import { Equipe } from "./pages/Equipe";
 import { Login } from "./pages/Login";
 import { Clientes } from "./pages/Clientes";
@@ -13,8 +13,9 @@ import { Perfil } from "./pages/Perfil";
 import { ActiveClientProvider } from "./context/ActiveClientContext";
 import { EntradasSaidas } from "./pages/EntradasSaidas";
 import { AtivosPassivos } from "./pages/AtivosPassivos";
-import { Protecao } from "./pages/Protecao"; // <--- IMPORT NOVO
+import { Protecao } from "./pages/Protecao";
 import { Educacao } from "./pages/Educacao";
+import { Parametros } from "./pages/Parametros";
 
 function App() {
   return (
@@ -25,8 +26,6 @@ function App() {
             <Route path="/login" element={<Login />} />
 
             <Route element={<MainLayout />}>
-              {/* ... outras rotas ... */}
-
               <Route
                 path="/"
                 element={
@@ -38,7 +37,7 @@ function App() {
                       "cliente_editor",
                     ]}
                   >
-                    <Dashboard />
+                    <Futuro />
                   </RoleGuard>
                 }
               />
@@ -65,7 +64,6 @@ function App() {
                 }
               />
 
-              {/* === NOVA ROTA AQUI === */}
               <Route
                 path="/protecao"
                 element={
@@ -78,12 +76,12 @@ function App() {
               />
               {/* ====================== */}
 
-              {/* ... resto das rotas (dashboard/:userId, cliente, equipe, etc) ... */}
+              {/* ... resto das rotas (futuro/:userId, cliente, equipe, etc) ... */}
               <Route
-                path="/dashboard/:userId"
+                path="/futuro/:userId"
                 element={
                   <RoleGuard allowedRoles={["master", "consultor"]}>
-                    <Dashboard />
+                    <Futuro />
                   </RoleGuard>
                 }
               />
@@ -129,6 +127,16 @@ function App() {
                     ]}
                   >
                     <Perfil />
+                  </RoleGuard>
+                }
+              />
+
+              {/* Rotas Administrativas */}
+              <Route
+                path="/parametros"
+                element={
+                  <RoleGuard allowedRoles={["master"]}>
+                    <Parametros />
                   </RoleGuard>
                 }
               />

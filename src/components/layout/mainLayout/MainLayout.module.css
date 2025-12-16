@@ -23,8 +23,8 @@
 
 /* Quando a sidebar estiver fechada (Desktop) */
 .contentWrapper.collapsed {
-  margin-left: 80px;
-  width: calc(100% - 80px);
+  margin-left: 100px;
+  width: calc(100% - 100px);
 }
 
 .content {

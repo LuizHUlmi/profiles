@@ -1,22 +1,17 @@
 import { useActiveClient } from "../context/ActiveClientContext";
 import { GestaoPatrimonio } from "../components/patrimonio/GestaoPatrimonio";
 import { Users } from "lucide-react";
+import styles from "./AtivosPassivos.module.css";
 
 export function AtivosPassivos() {
   const { activeClientId } = useActiveClient();
 
   if (!activeClientId) {
     return (
-      <div
-        style={{
-          padding: "2rem",
-          textAlign: "center",
-          color: "var(--text-secondary)",
-        }}
-      >
-        <Users size={48} style={{ marginBottom: "1rem", opacity: 0.5 }} />
-        <h2>Selecione um cliente</h2>
-        <p>
+      <div className={styles.emptyState}>
+        <Users size={48} className={styles.emptyIcon} />
+        <h2 className={styles.emptyTitle}>Selecione um cliente</h2>
+        <p className={styles.emptyText}>
           Selecione um cliente na barra superior para gerenciar seus ativos e
           passivos.
         </p>
@@ -25,22 +20,13 @@ export function AtivosPassivos() {
   }
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <div>
-        <h2
-          style={{
-            fontSize: "1.5rem",
-            fontWeight: "700",
-            color: "var(--text-primary)",
-            margin: 0,
-          }}
-        >
-          Estrutura Patrimonial
-        </h2>
-        <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem" }}>
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h2 className={styles.title}>Estrutura Patrimonial</h2>
+        <p className={styles.subtitle}>
           Gerencie Investimentos, Previdência, Imóveis e Dívidas.
         </p>
-      </div>
+      </header>
 
       <GestaoPatrimonio perfilId={activeClientId} />
     </div>

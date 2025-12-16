@@ -1,7 +1,29 @@
+/* src/components/patrimonio/GestaoPatrimonio.module.css */
+
 .container {
   margin-top: 2rem;
-  background-color: transparent;
+  width: 100%;
 }
+
+/* GRID AUTOMÁTICO */
+.grid {
+  display: grid;
+
+  /* A MÁGICA ACONTECE AQUI:
+     1. auto-fit: Encaixe quantas colunas derem.
+     2. minmax(300px, 1fr): Cada coluna tem que ter NO MÍNIMO 300px.
+        - Se a tela for larga, elas crescem (1fr).
+        - Se a tela apertar e não caber 4 de 300px, ele quebra para 3, depois 2...
+        - Isso evita a barra de rolagem horizontal automaticamente.
+  */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
+  gap: 1.5rem;
+  width: 100%;
+  align-items: start;
+}
+
+/* --- MANTIVE SEU ESTILO ORIGINAL ABAIXO (SEM ALTERAÇÕES VISUAIS) --- */
 
 .header {
   margin-bottom: 1.5rem;
@@ -14,29 +36,6 @@
   margin: 0;
 }
 
-/* GRID DE 4 COLUNAS */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 Colunas iguais */
-  gap: 1.5rem;
-  align-items: start;
-}
-
-/* Responsividade: Tablet (2 colunas) */
-@media (max-width: 1100px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Responsividade: Mobile (1 coluna) */
-@media (max-width: 640px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* COLUNA INDIVIDUAL */
 .column {
   background-color: var(--bg-card);
   border-radius: var(--radius-md);
@@ -44,13 +43,13 @@
   border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  height: 100%; /* Para que todas tenham altura igual se necessário */
+  height: 100%;
   min-height: 200px;
 }
 
 .columnHeader {
   padding: 1rem;
-  border-bottom: 2px solid transparent; /* A cor vem via inline-style no React */
+  border-bottom: 2px solid transparent;
   background-color: #fafafa;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }

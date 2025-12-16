@@ -1,7 +1,5 @@
-/* src/components/layout/sidebar/Sidebar.module.css */
-
 .sidebar {
-  width: 260px; /* Largura aberta */
+  width: 260px;
   height: 100vh;
   background-color: var(--bg-card);
   border-right: 1px solid var(--border-color);
@@ -11,57 +9,89 @@
   left: 0;
   top: 0;
   z-index: 50;
-  transition: all 0.3s ease; /* Transição suave para largura e posição */
+  transition: all 0.3s ease;
+  overflow: visible !important;
 }
 
-/* Estado Colapsado */
+/* Estado Colapsado (LARGURA AUMENTADA PARA 110px) */
 .sidebar.collapsed {
-  width: 80px;
+  width: 100px;
 }
 
-/* Header */
-.header {
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid transparent;
-}
-
-.collapsed .header {
-  justify-content: center;
-  padding: 0;
-}
-
-.logo {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--primary);
-  margin: 0;
-  letter-spacing: -0.5px;
-  white-space: nowrap;
-}
-
+/* --- BOTÃO FLUTUANTE MAIOR --- */
 .toggleButton {
-  background: none;
-  border: none;
+  position: absolute;
+  right: -16px; /* Metade de 32px */
+  top: 30px;
+
+  width: 32px; /* Maior */
+  height: 32px; /* Maior */
+  border-radius: 50%;
+
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: var(--radius-sm);
+
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
 }
 
 .toggleButton:hover {
   background-color: var(--bg-page);
   color: var(--primary);
+  transform: scale(1.1);
 }
 
-/* Navegação */
+/* --- HEADER & LOGOS --- */
+.header {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+}
+
+.collapsed .header {
+  padding: 0;
+  justify-content: center;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  width: 100%;
+}
+
+.collapsed .logoContainer {
+  justify-content: center;
+}
+
+/* Logo Grande */
+.logoFull {
+  height: 64px; /* Ajuste conforme seu logo */
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  display: block;
+  animation: fadeInLogo 0.3s ease-out forwards; /* Tempo de abertura da logo*/
+}
+
+/* Logo Ícone */
+.logoIcon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  display: block;
+}
+
+/* --- NAVEGAÇÃO & ÍCONES --- */
 .nav {
   flex: 1;
   display: flex;
@@ -83,7 +113,7 @@
   font-weight: 500;
   transition: all 0.2s;
   white-space: nowrap;
-  height: 48px;
+  min-height: 48px;
 }
 
 .collapsed .navItem {
@@ -109,13 +139,86 @@
   min-width: 24px;
 }
 
+/* REGRA GLOBAL PARA TAMANHO DOS ÍCONES (AUMENTADO) */
+.iconContainer svg {
+  width: 26px !important;
+  height: 26px !important;
+  transition: all 0.2s;
+}
+
+/* Opcional: Aumentar levemente ao passar o mouse */
+.navItem:hover .iconContainer svg {
+  transform: scale(1.1);
+}
+
 .divider {
   height: 1px;
   background-color: var(--border-color);
-  margin: 0.5rem 1rem;
+  margin: 0.5rem 0.5rem;
 }
 
-/* Footer */
+/* --- MENU GESTÃO --- */
+.menuGroup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  font-weight: 500;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.menuGroup:hover {
+  background-color: var(--bg-page);
+  color: var(--primary);
+}
+
+.menuGroupContent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.collapsed .menuGroup {
+  justify-content: center;
+  padding: 0;
+}
+
+.subMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.5rem;
+  animation: slideDown 0.2s ease-out;
+}
+
+.subItem {
+  padding-left: 3.2rem !important;
+  height: 40px;
+  font-size: 0.95rem;
+  min-height: 40px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- FOOTER --- */
 .footer {
   padding: 1rem;
   border-top: 1px solid var(--border-color);
@@ -123,13 +226,15 @@
   align-items: center;
   justify-content: space-between;
   background-color: #fafafa;
-  overflow: hidden;
-  height: 70px;
+  transition: all 0.3s ease;
 }
 
 .collapsed .footer {
+  flex-direction: column;
+  padding: 0.75rem 0;
+  gap: 0.75rem;
   justify-content: center;
-  padding: 0;
+  height: auto;
 }
 
 .userSection {
@@ -143,6 +248,7 @@
 .collapsed .userSection {
   justify-content: center;
   flex: 0;
+  width: 100%;
 }
 
 .userAvatar {
@@ -189,6 +295,9 @@
   border-radius: var(--radius-sm);
   transition: color 0.2s;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logoutButton:hover {
@@ -196,24 +305,35 @@
   background-color: #fee2e2;
 }
 
-/* --- MOBILE (Telas menores que 768px) --- */
+/* --- MOBILE --- */
 @media (max-width: 768px) {
   .sidebar {
-    /* No mobile, a sidebar aberta ocupa quase toda a tela ou largura fixa, mas flutuando */
-    width: 260px;
+    position: fixed;
+    height: 100vh;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    /* Quando fechada no mobile, ela some completamente para dar espaço */
     transform: translateX(0);
   }
 
-  /* Estado Colapsado no Mobile = Escondido fora da tela */
   .sidebar.collapsed {
-    width: 260px; /* Mantém largura */
-    transform: translateX(-100%); /* Joga para fora da tela */
+    transform: translateX(-100%);
+    width: 260px; /* Mantém largura normal para efeito de gaveta */
   }
 
-  /* Ajuste do botão de toggle para mobile se necessário */
-  .header {
-    padding-right: 10px;
+  .toggleButton {
+    display: none;
+  }
+}
+
+@keyframes fadeInLogo {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px); /* Começa levemente para a esquerda */
+  }
+  50% {
+    opacity: 0; /* Segura invisível até a barra abrir um pouco */
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
 }

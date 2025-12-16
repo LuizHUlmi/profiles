@@ -1,7 +1,12 @@
-// src/components/layout/sidebar/Sidebar.tsx
-
+import { useState } from "react";
 import { NavLink, useParams } from "react-router-dom";
 import styles from "./Sidebar.module.css";
+
+// --- IMPORTAÇÃO DOS LOGOS ---
+import logoFull from "../../../assets/logo/logo-full.png";
+import logoIcon from "../../../assets/logo/logo-icon.png";
+// ----------------------------
+
 import {
   LayoutDashboard,
   Users,
@@ -10,11 +15,14 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   UserCog,
   Scale,
   ArrowLeftRight,
   ShieldCheck,
-  GraduationCap, // <--- Import Novo
+  GraduationCap,
+  Settings,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -27,23 +35,44 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
   const { signOut, profile } = useAuth();
   const { userId } = useParams();
 
+  // Estado para controlar o submenu "Gestão"
+  const [isGestaoOpen, setIsGestaoOpen] = useState(false);
+
+  const toggleGestao = () => {
+    if (isCollapsed) {
+      toggleSidebar();
+      setIsGestaoOpen(true);
+    } else {
+      setIsGestaoOpen(!isGestaoOpen);
+    }
+  };
+
   return (
     <aside
       className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}
     >
+      {/* BOTÃO FLUTUANTE */}
+      <button
+        onClick={toggleSidebar}
+        className={styles.toggleButton}
+        title={isCollapsed ? "Expandir" : "Recolher"}
+      >
+        {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+      </button>
+
+      {/* HEADER: Apenas para o Logo */}
       <div className={styles.header}>
-        {!isCollapsed && <h1 className={styles.logo}>AVERE</h1>}
-        <button
-          onClick={toggleSidebar}
-          className={styles.toggleButton}
-          title={isCollapsed ? "Expandir" : "Recolher"}
-        >
-          {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        </button>
+        <div className={styles.logoContainer}>
+          {isCollapsed ? (
+            <img src={logoIcon} alt="Logo Ícone" className={styles.logoIcon} />
+          ) : (
+            <img src={logoFull} alt="Logo Avere" className={styles.logoFull} />
+          )}
+        </div>
       </div>
 
       <nav className={styles.nav}>
-        {/* ... Itens de Perfil ... */}
+        {/* === BLOCO: DADOS DO CLIENTE === */}
         {userId &&
           (profile?.role === "master" || profile?.role === "consultor") && (
             <NavLink
@@ -54,12 +83,13 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
               title="Dados do Cliente"
             >
               <div className={styles.iconContainer}>
-                <UserCog size={22} />
+                <UserCog />
               </div>
               {!isCollapsed && <span>Dados do Cliente</span>}
             </NavLink>
           )}
 
+        {/* === BLOCO: MINHA CONTA === */}
         <NavLink
           to="/perfil"
           className={({ isActive }) =>
@@ -69,13 +99,14 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
           end
         >
           <div className={styles.iconContainer}>
-            <UserCircle size={22} />
+            <UserCircle />
           </div>
           {!isCollapsed && <span>Minha Conta</span>}
         </NavLink>
 
         {!isCollapsed && <div className={styles.divider}></div>}
 
+        {/* === BLOCO: FERRAMENTAS PRINCIPAIS === */}
         <NavLink
           to="/ativos-passivos"
           className={({ isActive }) =>
@@ -84,12 +115,11 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
           title="Ativos e Passivos"
         >
           <div className={styles.iconContainer}>
-            <Scale size={22} />
+            <Scale />
           </div>
           {!isCollapsed && <span>Ativos e Passivos</span>}
         </NavLink>
 
-        {/* === LINK NOVO === */}
         <NavLink
           to="/protecao"
           className={({ isActive }) =>
@@ -98,11 +128,10 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
           title="Proteção e Seguros"
         >
           <div className={styles.iconContainer}>
-            <ShieldCheck size={22} />
+            <ShieldCheck />
           </div>
           {!isCollapsed && <span>Proteção</span>}
         </NavLink>
-        {/* ================= */}
 
         <NavLink
           to="/educacao"
@@ -112,7 +141,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
           title="Educação"
         >
           <div className={styles.iconContainer}>
-            <GraduationCap size={22} />
+            <GraduationCap />
           </div>
           {!isCollapsed && <span>Educação</span>}
         </NavLink>
@@ -125,57 +154,122 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
           title="Entradas e Saídas"
         >
           <div className={styles.iconContainer}>
-            <ArrowLeftRight size={22} />
+            <ArrowLeftRight />
           </div>
           {!isCollapsed && <span>Entradas e Saídas</span>}
         </NavLink>
 
         <NavLink
-          to={userId ? `/dashboard/${userId}` : "/"}
+          to={userId ? `/futuro/${userId}` : "/"}
           className={({ isActive }) =>
             `${styles.navItem} ${isActive ? styles.active : ""}`
           }
-          title="Dashboard"
+          title="Futuro"
           end
         >
           <div className={styles.iconContainer}>
-            <LayoutDashboard size={22} />
+            <LayoutDashboard />
           </div>
-          {!isCollapsed && <span>Dashboard</span>}
+          {!isCollapsed && <span>Futuro</span>}
         </NavLink>
 
-        {/* ... Resto do menu (Equipe, Clientes) ... */}
+        {/* === BLOCO: GESTÃO (Exclusivo MASTER) === */}
         {profile?.role === "master" && (
-          <NavLink
-            to="/equipe"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.active : ""}`
-            }
-            title="Equipe"
-          >
-            <div className={styles.iconContainer}>
-              <Briefcase size={22} />
-            </div>
-            {!isCollapsed && <span>Equipe</span>}
-          </NavLink>
+          <>
+            {!isCollapsed && <div className={styles.divider}></div>}
+
+            <button
+              onClick={toggleGestao}
+              className={styles.menuGroup}
+              title="Gestão"
+            >
+              <div className={styles.menuGroupContent}>
+                <div className={styles.iconContainer}>
+                  <Settings />
+                </div>
+                {!isCollapsed && <span>Gestão</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  size={16}
+                  className={styles.chevron}
+                  style={{
+                    transform: isGestaoOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.2s",
+                  }}
+                />
+              )}
+            </button>
+
+            {isGestaoOpen && !isCollapsed && (
+              <div className={styles.subMenu}>
+                <NavLink
+                  to="/equipe"
+                  className={({ isActive }) =>
+                    `${styles.navItem} ${styles.subItem} ${
+                      isActive ? styles.active : ""
+                    }`
+                  }
+                >
+                  <div className={styles.iconContainer}>
+                    <Briefcase />
+                  </div>
+                  <span>Equipe</span>
+                </NavLink>
+
+                <NavLink
+                  to="/cliente"
+                  className={({ isActive }) =>
+                    `${styles.navItem} ${styles.subItem} ${
+                      isActive ? styles.active : ""
+                    }`
+                  }
+                >
+                  <div className={styles.iconContainer}>
+                    <Users />
+                  </div>
+                  <span>Clientes</span>
+                </NavLink>
+
+                <NavLink
+                  to="/parametros"
+                  className={({ isActive }) =>
+                    `${styles.navItem} ${styles.subItem} ${
+                      isActive ? styles.active : ""
+                    }`
+                  }
+                >
+                  <div className={styles.iconContainer}>
+                    <SlidersHorizontal />
+                  </div>
+                  <span>Parâmetros</span>
+                </NavLink>
+              </div>
+            )}
+          </>
         )}
 
-        {(profile?.role === "master" || profile?.role === "consultor") && (
-          <NavLink
-            to="/cliente"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.active : ""}`
-            }
-            title="Carteira de Clientes"
-          >
-            <div className={styles.iconContainer}>
-              <Users size={22} />
-            </div>
-            {!isCollapsed && <span>Clientes</span>}
-          </NavLink>
+        {/* === BLOCO: CONSULTOR === */}
+        {profile?.role === "consultor" && (
+          <>
+            {!isCollapsed && <div className={styles.divider}></div>}
+            <NavLink
+              to="/cliente"
+              className={({ isActive }) =>
+                `${styles.navItem} ${isActive ? styles.active : ""}`
+              }
+              title="Carteira de Clientes"
+            >
+              <div className={styles.iconContainer}>
+                <Users />
+              </div>
+              {!isCollapsed && <span>Clientes</span>}
+            </NavLink>
+          </>
         )}
       </nav>
 
+      {/* === FOOTER === */}
       <div className={styles.footer}>
         <div className={styles.userSection}>
           <div className={styles.userAvatar}>
@@ -194,15 +288,10 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
             </div>
           )}
         </div>
-        {!isCollapsed && (
-          <button
-            onClick={signOut}
-            className={styles.logoutButton}
-            title="Sair"
-          >
-            <LogOut size={20} />
-          </button>
-        )}
+
+        <button onClick={signOut} className={styles.logoutButton} title="Sair">
+          <LogOut size={20} />
+        </button>
       </div>
     </aside>
   );
