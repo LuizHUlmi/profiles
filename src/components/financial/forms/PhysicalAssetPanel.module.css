@@ -1,0 +1,78 @@
+/* src/components/financial/forms/PhysicalAssetPanel.module.css */
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.singleColumn {
+  width: 100%;
+}
+
+.separator {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 0.5rem 0;
+  width: 100%;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkboxLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  /* Flex wrap permite que o botão quebre linha em telas muito pequenas */
+  flex-wrap: wrap;
+}
+
+.checkboxLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer; /* Melhora UX ao passar mouse no texto */
+}
+
+/* NOVA CLASSE: Botão de texto */
+.defaultButton {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.5rem; /* Espaço da label */
+
+  font-size: 0.75rem; /* 12px (menor que o texto normal) */
+  font-weight: 600;
+  color: #2563eb; /* Blue 600 */
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.defaultButton:hover {
+  color: #1d4ed8; /* Blue 700 */
+  text-decoration: underline;
+}

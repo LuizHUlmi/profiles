@@ -1,0 +1,33 @@
+/* src/components/financial/forms/FinancialInvestmentPanel.module.css */
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  /* margin-bottom removido */
+}
+
+.singleColumn {
+  width: 100%;
+  /* margin-bottom removido */
+}
+
+.separator {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 0.5rem 0; /* Reduzi a margem vertical do separador também */
+  width: 100%;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  /* margin-bottom removido pois o gap do pai já resolve */
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -7,6 +7,7 @@ import { Plus, Copy } from "lucide-react";
 import { Input } from "../../ui/input/Input";
 import { Button } from "../../ui/button/Button";
 import { useToast } from "../../ui/toast/ToastContext";
+import { Select } from "../../ui/select/Select";
 
 type NewSimulationModalProps = {
   clientId: string;
@@ -179,7 +180,7 @@ export function NewSimulationModal({
           Basear-se em (Duplicar)
         </label>
         <div style={{ position: "relative" }}>
-          <select
+          <Select
             style={{
               width: "100%",
               padding: "0.75rem",
@@ -198,7 +199,7 @@ export function NewSimulationModal({
                 Copiar de: {sim.titulo}
               </option>
             ))}
-          </select>
+          </Select>
           <Copy
             size={16}
             style={{

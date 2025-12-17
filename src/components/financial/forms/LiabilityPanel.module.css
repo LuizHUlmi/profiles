@@ -1,0 +1,67 @@
+/* src/components/financial/forms/LiabilityPanel.module.css */
+
+/* Grid Principal (2 colunas) */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  /* align-items: flex-start garante que se um campo tiver erro (ficar mais alto), o outro não estica */
+  align-items: flex-start;
+}
+
+/* Coluna Única (Largura total) */
+.singleColumn {
+  width: 100%;
+}
+
+/* Container para dividir uma célula do grid em duas (Para Indexador + Taxa) */
+.splitRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Divide o espaço ao meio */
+  gap: 0.75rem; /* Espaçamento interno menor entre os dois campos */
+}
+
+/* Separador Visual */
+.separator {
+  height: 1px;
+  background-color: #e5e7eb; /* gray-200 */
+  margin: 0.5rem 0;
+  width: 100%;
+}
+
+/* Títulos */
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  /* A margem bottom é controlada pelo gap do form pai, mas podemos dar um respiro extra se necessário */
+  margin-top: 0.5rem;
+}
+
+/* Checkbox */
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkboxLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr; /* Tudo vira 1 coluna no mobile */
+  }
+
+  /* No mobile, talvez você queira que o Indexador e a Taxa também fiquem um embaixo do outro, 
+     ou mantenham-se lado a lado se forem pequenos. 
+     Vou deixar lado a lado (1fr 1fr) pois são campos curtos, mas se preferir empilhar, mude para 1fr abaixo. */
+  .splitRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}

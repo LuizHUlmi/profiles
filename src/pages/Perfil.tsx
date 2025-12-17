@@ -14,6 +14,7 @@ import { DadosPessoaisCard } from "../components/clients/DadosPessoaisCard";
 // import { Button } from "../components/ui/button/Button"; // Pode remover se não for usar em outro lugar
 import { EnderecoPessoal } from "../components/clients/EnderecoPessoal";
 import { FamiliaSection } from "../components/clients/FamiliaSection"; // Nossa nova seção
+import { GlobalParametersForm } from "../components/clients/GlobalParametersForm";
 
 export function Perfil() {
   const { profile } = useAuth();
@@ -108,6 +109,14 @@ export function Perfil() {
           <FamiliaSection profileId={targetId} />
         </div>
       )}
+
+      <div>
+        {/* Outros componentes de perfil... */}
+
+        <div className={styles.fullWidthSection}>
+          <GlobalParametersForm />
+        </div>
+      </div>
 
       {/* 3. ENDEREÇO */}
       {isClient && (

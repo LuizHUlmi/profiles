@@ -15,7 +15,7 @@ import { useToast } from "../../ui/toast/ToastContext";
 import { supabase } from "../../../lib/supabase";
 import { Button } from "../../ui/button/Button";
 import { Modal } from "../../ui/modal/Modal";
-import { NewSimulationModal } from "../../financial/form/NewSimulationModal";
+import { NewSimulationModal } from "../../financial/forms/NewSimulationModal";
 
 type Item = { id: string; nome: string | null; titulo?: string };
 
