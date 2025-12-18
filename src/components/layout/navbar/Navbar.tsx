@@ -88,6 +88,7 @@ export function Navbar() {
 
   useEffect(() => {
     loadSimulacoes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClientId]); // Recarrega se mudar o cliente global
 
   // --- HANDLERS ---

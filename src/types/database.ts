@@ -1,64 +1,14 @@
-// 1. Define os papéis possíveis no sistema (usado no AuthContext e Perfil)
+// src/types/database.ts
+
+// --- 1. CONTROLE DE ACESSO ---
 export type UserRole =
   | "master"
   | "consultor"
   | "cliente_leitor"
   | "cliente_editor";
 
-// 2. Define o nível de acesso específico da equipe (usado no ConsultorForm)
 export type NivelAcesso = "master" | "consultor";
 
-// --- PROJETO (A Biblioteca) ---
-export interface Projeto {
-  id: number; // ou string, dependendo de como criou no banco (bigint é number/string)
-  user_id?: string;
-  nome: string;
-  prioridade: string;
-  valor: number;
-  prazo: string;
-  tipo?: string;
-  idade_realizacao?: number;
-}
-
-// --- SIMULAÇÃO (O Cenário) ---
-export interface Simulacao {
-  id: string;
-  perfil_id: string;
-  titulo: string;
-  ativo: boolean;
-
-  // Sliders
-  idade_aposentadoria: number;
-  renda_desejada: number;
-  outras_rendas: number;
-  investimento_mensal: number;
-  patrimonio_atual: number;
-}
-
-// --- VÍNCULO (A Ligação) ---
-export interface SimulacaoProjeto {
-  id: string;
-  simulacao_id: string;
-  projeto_id: number;
-  ativo: boolean;
-}
-
-// 3. Interface da tabela 'perfis' (Clientes e Usuários logados)
-export interface Perfil {
-  id: string;
-  user_id?: string; // Link com a autenticação do Supabase
-  nome: string;
-  cpf?: string;
-  email: string;
-  data_nascimento?: string;
-  telefone?: string;
-  expectativa_vida?: number;
-  // Controle de Acesso
-  role: UserRole;
-  consultor_id?: string | null;
-}
-
-// 4. Interface da tabela 'consultores' (A lista de permissão da equipe)
 export interface Consultor {
   id: string;
   nome: string;
@@ -67,12 +17,18 @@ export interface Consultor {
   ativo: boolean;
 }
 
-// 5. Interfaces auxiliares (já existiam)
-export interface Conjuge {
-  id: number;
-  perfil_id: string;
+// --- 2. PERFIS E FAMÍLIA ---
+export interface Perfil {
+  id: string;
+  user_id?: string;
   nome: string;
-  cpf: string;
+  email: string;
+  cpf?: string;
+  data_nascimento?: string;
+  telefone?: string;
+  expectativa_vida?: number;
+  role: UserRole;
+  consultor_id?: string | null;
 }
 
 export interface Endereco {
@@ -82,28 +38,57 @@ export interface Endereco {
   logradouro: string;
 }
 
-export interface Projeto {
-  id: number;
-  nome: string;
-  prioridade: string; // 'essencial', 'desejo', 'sonho'
-  valor: number;
-  prazo: string;
-}
-
 export interface Familiar {
   id: number;
   perfil_id: string;
   nome: string;
   data_nascimento: string;
-  parentesco: "Cônjuge" | "Filho" | "Pais" | "Animal" | "Outros"; // Adicionado Cônjuge
-  cpf?: string; // Adicionado opcional
+  parentesco: "Cônjuge" | "Filho" | "Pais" | "Animal" | "Outros";
+  // CPF removido conforme sua alteração no banco
+  // Novo campo unificado:
+  idade_aposentadoria?: number | null;
 }
+
+// --- 3. PROJETOS DE VIDA ---
+// Interface unificada e completa
+export interface Projeto {
+  id: number;
+  perfil_id: string; // Padronizado como perfil_id (vinculo com o Cliente)
+  nome: string;
+  prioridade: string; // 'essencial', 'desejo', 'sonho'
+  valor: number;
+  prazo: string;
+  tipo?: string;
+  idade_realizacao?: number | null; // Importante para o cálculo futuro
+}
+
+// --- 4. SIMULAÇÃO E CENÁRIOS ---
+export interface Simulacao {
+  id: string;
+  perfil_id: string;
+  titulo: string;
+  ativo: boolean;
+  idade_aposentadoria: number;
+  renda_desejada: number;
+  outras_rendas: number;
+  investimento_mensal: number;
+  patrimonio_atual: number;
+}
+
+export interface SimulacaoProjeto {
+  id: string;
+  simulacao_id: string;
+  projeto_id: number;
+  ativo: boolean;
+}
+
+// --- 5. FINANCEIRO E PATRIMÔNIO ---
 
 export interface ItemFluxoCaixa {
   id: number;
   perfil_id: string;
-  familiar_id: number | null; // Nulo se for Titular, Casal ou Família
-  proprietario_tipo: "titular" | "dependente" | "casal" | "familia"; // <--- NOVO
+  familiar_id: number | null;
+  proprietario_tipo: "titular" | "dependente" | "casal" | "familia";
   tipo: "receita" | "despesa";
   descricao: string;
   valor_mensal: number;
@@ -113,57 +98,40 @@ export interface ItemFluxoCaixa {
   correcao_anual?: number | null;
 }
 
-// src/types/database.ts
-
+// Tabela Unificada para Bens, Direitos e Deveres
 export interface ItemAtivoPassivo {
   id: number;
   perfil_id: string;
   familiar_id: number | null;
   proprietario_tipo: "titular" | "dependente" | "casal" | "familia";
   categoria: "ativo" | "passivo";
+
   tipo: string;
   nome: string;
   valor: number;
 
-  // Campos de Herança
+  // Ativos
   inventariar: boolean;
   percentual_inventario?: number | null;
   investir_pos_morte: boolean;
-
-  // Campos de Investimento
-  rentabilidade_tipo?: "cdi" | "bruta" | "ipca" | null;
+  rentabilidade_tipo?: "cdi" | "bruta" | "ipca" | "pre" | "selic" | null;
   rentabilidade_valor?: number | null;
-
-  // Campo de Previdência
   regime_tributario?: "progressivo" | "regressivo" | null;
 
-  // NOVOS CAMPOS (Passivos)
+  // Passivos
   valor_parcela?: number | null;
   prazo_meses?: number | null;
-  amortizacao_tipo?: "SAC" | "PRICE" | null;
+  amortizacao_tipo?: "SAC" | "PRICE" | "BULLET" | null;
   correcao_anual?: number | null;
   segurado?: boolean | null;
 }
 
-export type CategoriaPatrimonio =
-  | "investimento"
-  | "previdencia"
-  | "imobilizado"
-  | "passivo";
-
-export interface ItemPatrimonio {
-  id: number;
-  perfil_id: string; // Dono do ativo/passivo
-  nome: string;
-  valor: number;
-  categoria: CategoriaPatrimonio;
-  detalhes?: string; // Ex: Instituição, Endereço, Taxa (vamos expandir depois)
-}
+// --- 6. PROTEÇÃO E EDUCAÇÃO ---
 
 export interface ItemSeguro {
   id: number;
   perfil_id: string;
-  proprietario_tipo: "titular" | "dependente" | "conjuge";
+  proprietario_tipo: "titular" | "dependente"; // 'conjuge' removido (use familiar_id)
   familiar_id: number | null;
   nome: string;
   cobertura: number;
@@ -183,4 +151,13 @@ export interface ItemEducacao {
   correcao_anual?: number | null;
   ano_inicio: number;
   duracao_anos: number;
+}
+
+// Adicione junto com as outras interfaces
+export interface PremissasEconomicas {
+  id: number;
+  perfil_id: string | null; // Null = Sistema, String = Cliente
+  selic: number;
+  inflacao: number;
+  custo_inventario_padrao: number;
 }

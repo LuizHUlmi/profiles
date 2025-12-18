@@ -4,16 +4,13 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useActiveClient } from "../context/ActiveClientContext";
-
-// Remover UserPlus pois o botão antigo "Adicionar Cônjuge" vai sair
-// import { UserPlus } from "lucide-react";
-
 import styles from "./perfil.module.css";
 import { useToast } from "../components/ui/toast/ToastContext";
+
+// Componentes da Página
 import { DadosPessoaisCard } from "../components/clients/DadosPessoaisCard";
-// import { Button } from "../components/ui/button/Button"; // Pode remover se não for usar em outro lugar
 import { EnderecoPessoal } from "../components/clients/EnderecoPessoal";
-import { FamiliaSection } from "../components/clients/FamiliaSection"; // Nossa nova seção
+import { FamiliaSection } from "../components/clients/FamiliaSection";
 import { GlobalParametersForm } from "../components/clients/GlobalParametersForm";
 
 export function Perfil() {
@@ -24,11 +21,9 @@ export function Perfil() {
   const [loadingData, setLoadingData] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [profileData, setProfileData] = useState<any>(null);
-
   const [isClient, setIsClient] = useState(false);
 
-  // REMOVIDO: const [mostrarConjuge, setMostrarConjuge] = useState(false); <--- Não precisamos mais disso
-
+  // Define quem é o alvo: o cliente selecionado pelo Consultor OU o próprio usuário logado
   const targetId = activeClientId || profile?.id;
 
   useEffect(() => {
@@ -36,6 +31,7 @@ export function Perfil() {
       if (!targetId) return;
       setLoadingData(true);
       try {
+        // 1. Tenta buscar na tabela de Perfis (Clientes)
         const { data: cliente } = await supabase
           .from("perfis")
           .select("*")
@@ -45,8 +41,8 @@ export function Perfil() {
         if (cliente) {
           setProfileData(cliente);
           setIsClient(true);
-          // REMOVIDO: Lógica de checar conjuge_nome
         } else {
+          // 2. Se não achar, tenta buscar na tabela de Consultores (Equipe)
           const { data: consultor } = await supabase
             .from("consultores")
             .select("*")
@@ -74,6 +70,7 @@ export function Perfil() {
         <p>Carregando...</p>
       </div>
     );
+
   if (!targetId || !profileData)
     return (
       <div className={styles.loadingContainer}>
@@ -83,7 +80,7 @@ export function Perfil() {
 
   return (
     <div className={styles.container}>
-      {/* 1. DADOS DO TITULAR (Unica coluna agora, ou full width) */}
+      {/* 1. DADOS PESSOAIS */}
       <div className={styles.rowContainer}>
         <div className={styles.cardWrapper}>
           <DadosPessoaisCard
@@ -94,13 +91,9 @@ export function Perfil() {
             prefixo=""
           />
         </div>
-
-        {/* REMOVIDO: Card do Cônjuge antigo */}
       </div>
 
-      {/* REMOVIDO: Botão Adicionar Cônjuge antigo */}
-
-      {/* 2. NOVA SEÇÃO FAMÍLIA (Onde o Cônjuge vai aparecer agora) */}
+      {/* 2. COMPOSIÇÃO FAMILIAR (Apenas Clientes) */}
       {isClient && (
         <div
           className={styles.fullWidthSection}
@@ -110,15 +103,13 @@ export function Perfil() {
         </div>
       )}
 
-      <div>
-        {/* Outros componentes de perfil... */}
-
-        <div className={styles.fullWidthSection}>
-          <GlobalParametersForm />
-        </div>
+      {/* 3. PREMISSAS ECONÔMICAS (Correção Aplicada Aqui) */}
+      <div className={styles.fullWidthSection}>
+        {/* Passamos o targetId para que o formulário saiba a quem salvar */}
+        <GlobalParametersForm profileId={targetId} />
       </div>
 
-      {/* 3. ENDEREÇO */}
+      {/* 4. ENDEREÇO (Apenas Clientes) */}
       {isClient && (
         <div className={styles.fullWidthSection}>
           <EnderecoPessoal

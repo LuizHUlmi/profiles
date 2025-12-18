@@ -1,10 +1,16 @@
-// src/components/settings/GlobalParametersForm.tsx
+// src/components/clients/GlobalParametersForm.tsx
 
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Input } from "../ui/input/Input";
 import { Button } from "../ui/button/Button";
-import { Save } from "lucide-react"; // Importei ícone de reset (opcional)
+import { Save, AlertTriangle } from "lucide-react";
+import { usePremissas } from "../../hooks/usePremissas";
 import styles from "./GlobalParametersForm.module.css";
+
+interface FormProps {
+  profileId: string;
+}
 
 interface GlobalParams {
   selic: number;
@@ -12,42 +18,79 @@ interface GlobalParams {
   custo_inventario_padrao: number;
 }
 
-// 1. Definição dos Valores Padrão do Sistema
-const SYSTEM_DEFAULTS: GlobalParams = {
-  selic: 10.75,
-  inflacao: 4.5,
-  custo_inventario_padrao: 15.0,
-};
+export function GlobalParametersForm({ profileId }: FormProps) {
+  const { loading, fetchPremissas, savePremissas, resetToSystemDefaults } =
+    usePremissas();
+  const [isCustomized, setIsCustomized] = useState(false);
 
-export function GlobalParametersForm() {
   const {
     register,
     handleSubmit,
-    reset, // Necessário para resetar o form
+    reset,
     formState: { errors, isSubmitting },
-  } = useForm<GlobalParams>({
-    defaultValues: SYSTEM_DEFAULTS, // Começa com os padrões
-  });
+  } = useForm<GlobalParams>();
 
+  // 1. Carregar dados
+  useEffect(() => {
+    async function load() {
+      if (profileId) {
+        const data = await fetchPremissas(profileId);
+        setIsCustomized(data.perfil_id !== null); // Se tem perfil_id, é customizado
+        reset({
+          selic: data.selic,
+          inflacao: data.inflacao,
+          custo_inventario_padrao: data.custo_inventario_padrao,
+        });
+      }
+    }
+    load();
+  }, [profileId, fetchPremissas, reset]);
+
+  // 2. Salvar
   const onSubmit = async (data: GlobalParams) => {
-    console.log("Salvando parâmetros:", data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const payload = {
+      selic: Number(data.selic),
+      inflacao: Number(data.inflacao),
+      custo_inventario_padrao: Number(data.custo_inventario_padrao),
+    };
+
+    const sucesso = await savePremissas(profileId, payload);
+    if (sucesso) setIsCustomized(true);
   };
 
-  // 2. Função para restaurar os padrões
-  const handleReset = (e: React.MouseEvent) => {
-    e.preventDefault(); // Evita submit
-    const confirmou = window.confirm(
-      "Deseja restaurar os valores originais do sistema?"
-    );
-    if (confirmou) {
-      reset(SYSTEM_DEFAULTS);
+  // 3. Restaurar
+  const handleReset = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (
+      window.confirm(
+        "Deseja remover as personalizações e voltar ao padrão do sistema?"
+      )
+    ) {
+      const defaults = await resetToSystemDefaults(profileId);
+      reset(defaults);
+      setIsCustomized(false);
     }
   };
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Premissas do Sistema</h2>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Premissas Econômicas</h2>
+
+        {/* Renderização Condicional do Alerta */}
+        {isCustomized ? (
+          <div className={styles.warningBox}>
+            <AlertTriangle size={20} style={{ flexShrink: 0 }} />
+            <div>
+              <strong>Taxas Personalizadas Ativas</strong>
+              Este cliente possui configurações específicas que substituem o
+              padrão global do sistema.
+            </div>
+          </div>
+        ) : (
+          <></>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className={styles.card}>
         <Input
@@ -55,8 +98,7 @@ export function GlobalParametersForm() {
           type="number"
           step="0.01"
           placeholder="0.00"
-          tooltip="Taxa básica de juros. Base para cálculo de renda fixa."
-          {...register("selic", { required: "Obrigatório" })}
+          {...register("selic", { required: true })}
           error={errors.selic?.message}
         />
 
@@ -65,8 +107,7 @@ export function GlobalParametersForm() {
           type="number"
           step="0.01"
           placeholder="0.00"
-          tooltip="Usado para calcular ganho real e trazer valores futuros a valor presente."
-          {...register("inflacao", { required: "Obrigatório" })}
+          {...register("inflacao", { required: true })}
           error={errors.inflacao?.message}
         />
 
@@ -76,32 +117,29 @@ export function GlobalParametersForm() {
             type="number"
             step="0.1"
             placeholder="0.0"
-            tooltip="Soma estimada de ITCMD, Advogado e Custas. Será usado como padrão ao cadastrar bens."
-            {...register("custo_inventario_padrao", {
-              required: "Obrigatório",
-            })}
+            tooltip="Valor padrão sugerido ao cadastrar novos bens."
+            {...register("custo_inventario_padrao", { required: true })}
             error={errors.custo_inventario_padrao?.message}
           />
         </div>
 
-        {/* ÁREA DE AÇÕES */}
-        <div className={`${styles.fullWidth} ${styles.actions}`}>
-          {/* 3. Botão de Reset */}
+        <div className={styles.actions}>
           <button
             type="button"
             className={styles.resetButton}
             onClick={handleReset}
-            title="Restaurar valores originais (Selic 10.75%, Inflação 4.5%, Custo 15%)"
+            disabled={loading || isSubmitting || !isCustomized} // Só habilita se for personalizado
+            title="Apagar personalização e voltar ao padrão master"
           >
-            Usar parâmetros padrão
+            Restaurar padrão do sistema
           </button>
 
           <Button
             type="submit"
-            loading={isSubmitting}
+            loading={loading || isSubmitting}
             icon={<Save size={16} />}
           >
-            Salvar Parâmetros
+            Salvar
           </Button>
         </div>
       </form>

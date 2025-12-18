@@ -3,9 +3,9 @@ import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
 
 import styles from "./DadosPessoaisCard.module.css";
+// Certifique-se que maskCPF e maskPhone estão sendo importados corretamente
 import { maskCPF, maskPhone, unmask } from "../../utils/masks";
 
-// ADICIONEI O ÍCONE 'X'
 import { Save, X } from "lucide-react";
 import { useToast } from "../ui/toast/ToastContext";
 import { Input } from "../ui/input/Input";
@@ -39,9 +39,32 @@ export function DadosPessoaisCard({
     formState: { errors },
   } = useForm();
 
+  // --- ALTERAÇÃO AQUI ---
+  // Monitora initialData e aplica máscaras antes de jogar no form
   useEffect(() => {
-    if (initialData) reset(initialData);
-  }, [initialData, reset]);
+    if (initialData) {
+      // Cria uma cópia para não mutar o original
+      const dataFormatada = { ...initialData };
+
+      // Identifica as chaves corretas baseadas no prefixo
+      const keyCpf = `${prefixo}cpf`;
+      const keyTelefone = `${prefixo}telefone`;
+
+      // Aplica máscara de CPF se existir valor
+      if (dataFormatada[keyCpf]) {
+        dataFormatada[keyCpf] = maskCPF(dataFormatada[keyCpf]);
+      }
+
+      // Aplica máscara de Telefone se existir valor
+      if (dataFormatada[keyTelefone]) {
+        dataFormatada[keyTelefone] = maskPhone(dataFormatada[keyTelefone]);
+      }
+
+      // Reinicia o formulário com os dados mascarados
+      reset(dataFormatada);
+    }
+  }, [initialData, reset, prefixo]);
+  // ----------------------
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
@@ -52,6 +75,7 @@ export function DadosPessoaisCard({
       const table = isClient ? "perfis" : "consultores";
       const payload = { ...data };
 
+      // Remove máscaras antes de salvar no banco
       if (payload[`${prefixo}cpf`])
         payload[`${prefixo}cpf`] = unmask(payload[`${prefixo}cpf`]);
       if (payload[`${prefixo}telefone`])
@@ -74,7 +98,6 @@ export function DadosPessoaisCard({
 
   return (
     <div className={styles.container}>
-      {/* CABEÇALHO FLEXÍVEL: Título + Botão Fechar (se existir) */}
       <div
         style={{
           display: "flex",
@@ -102,7 +125,7 @@ export function DadosPessoaisCard({
               transition: "color 0.2s",
             }}
             title="Remover esta seção"
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")} // Fica vermelho ao passar mouse
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
           >
             <X size={24} />

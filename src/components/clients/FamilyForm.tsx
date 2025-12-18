@@ -4,35 +4,48 @@ import { useForm } from "react-hook-form";
 import { Input } from "../ui/input/Input";
 import { Button } from "../ui/button/Button";
 import { Save } from "lucide-react";
-import { maskCPF, unmask } from "../../utils/masks"; // Importando máscara
+import { unmask } from "../../utils/masks";
+import styles from "./FamilyForm.module.css";
 
 type FamilyFormData = {
   nome: string;
   data_nascimento: string;
   parentesco: "Cônjuge" | "Filho" | "Pais" | "Animal" | "Outros";
   cpf?: string;
+  idade_aposentadoria?: string;
 };
 
 interface FamilyFormProps {
   onClose: () => void;
-  onSubmit: (data: FamilyFormData) => Promise<boolean>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onSubmit: (data: any) => Promise<boolean>;
 }
 
 export function FamilyForm({ onClose, onSubmit }: FamilyFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
+    watch,
   } = useForm<FamilyFormData>();
+
+  // Monitoramento
+  const parentescoSelecionado = watch("parentesco");
+  const isConjuge = parentescoSelecionado === "Cônjuge";
 
   const handleFormSubmit = async (data: FamilyFormData) => {
     setIsSubmitting(true);
-    // Remove pontuação do CPF antes de enviar
+
+    // Tratamento dos dados antes de enviar
     const payload = {
       ...data,
       cpf: data.cpf ? unmask(data.cpf) : undefined,
+      idade_aposentadoria:
+        isConjuge && data.idade_aposentadoria
+          ? Number(data.idade_aposentadoria)
+          : null,
     };
 
     const success = await onSubmit(payload);
@@ -41,33 +54,21 @@ export function FamilyForm({ onClose, onSubmit }: FamilyFormProps) {
   };
 
   return (
-    <div style={{ padding: "0.5rem", minWidth: "300px" }}>
-      <h3 style={{ marginTop: 0 }}>Adicionar Familiar</h3>
-      <form
-        onSubmit={handleSubmit(handleFormSubmit)}
-        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-      >
+    <div className={styles.container}>
+      <h3 className={styles.title}>Adicionar Familiar</h3>
+
+      <form onSubmit={handleSubmit(handleFormSubmit)} className={styles.form}>
         <Input
           label="Nome Completo"
           error={errors.nome?.message}
           {...register("nome", { required: "Nome é obrigatório" })}
         />
 
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}
-        >
-          <label style={{ fontSize: "0.9rem", fontWeight: 500, color: "#333" }}>
-            Parentesco
-          </label>
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Parentesco</label>
           <select
             {...register("parentesco", { required: true })}
-            style={{
-              padding: "0.75rem",
-              borderRadius: "6px",
-              border: "1px solid #e0e0e0",
-              backgroundColor: "white",
-              fontSize: "1rem",
-            }}
+            className={styles.select}
           >
             <option value="Cônjuge">Cônjuge</option>
             <option value="Filho">Filho(a)</option>
@@ -77,16 +78,21 @@ export function FamilyForm({ onClose, onSubmit }: FamilyFormProps) {
           </select>
         </div>
 
-        {/* Campo de CPF (Geralmente importante para Cônjuge) */}
-        <Input
-          label="CPF (Opcional)"
-          placeholder="000.000.000-00"
-          maxLength={14}
-          error={errors.cpf?.message}
-          {...register("cpf", {
-            onChange: (e) => setValue("cpf", maskCPF(e.target.value)),
-          })}
-        />
+        {isConjuge && (
+          <div className={styles.fadeIn}>
+            <Input
+              label="Idade Prevista Aposentadoria"
+              type="number"
+              placeholder="Ex: 65"
+              error={errors.idade_aposentadoria?.message}
+              {...register("idade_aposentadoria", {
+                required: isConjuge ? "Informe a idade prevista" : false,
+                min: { value: 1, message: "Idade inválida" },
+                max: { value: 100, message: "Idade inválida" },
+              })}
+            />
+          </div>
+        )}
 
         <Input
           label="Data de Nascimento"
@@ -95,14 +101,7 @@ export function FamilyForm({ onClose, onSubmit }: FamilyFormProps) {
           {...register("data_nascimento", { required: "Data obrigatória" })}
         />
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "10px",
-            marginTop: "1rem",
-          }}
-        >
+        <div className={styles.actions}>
           <Button
             type="button"
             variant="ghost"

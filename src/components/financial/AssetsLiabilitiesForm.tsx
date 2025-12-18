@@ -8,7 +8,7 @@ import { Button } from "../ui/button/Button";
 import { Save } from "lucide-react";
 import { useToast } from "../ui/toast/ToastContext";
 import { maskCurrency } from "../../utils/masks";
-import styles from "./AssetsLiabilitiesForm.module.css"; // <--- Importação do CSS
+import styles from "./AssetsLiabilitiesForm.module.css";
 
 // Schemas e Tipos
 import {
@@ -25,10 +25,7 @@ import { PensionPanel } from "./forms/PensionPanel";
 import { FinancialInvestmentPanel } from "./forms/FinancialInvestmentPanel";
 import { PhysicalAssetPanel } from "./forms/PhysicalAssetPanel";
 
-export type AssetPayload = Omit<
-  ItemAtivoPassivo,
-  "id" | "perfil_id" | "created_at"
->;
+export type AssetPayload = Omit<ItemAtivoPassivo, "id" | "perfil_id">;
 
 interface FormProps {
   categoria: "ativo" | "passivo";
@@ -63,6 +60,8 @@ export function AssetsLiabilitiesForm({
   const methods = useForm<FinancialItemInput>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(financialItemSchema) as any,
+    // O 'as any' aqui resolve o Erro da Linha 66, pois o TS não consegue
+    // inferir qual braço da Union (Ativo ou Passivo) usar apenas com os defaults parciais.
     defaultValues: {
       categoria,
       tipo:
@@ -70,14 +69,16 @@ export function AssetsLiabilitiesForm({
         (categoria === "ativo" ? "Aplicação Financeira" : "Outros"),
       proprietario_select: "titular",
       valor: "",
-      rentabilidade_tipo: "cdi",
+      // Ajuste: Passivos geralmente não aceitam 'cdi' no schema, então usamos 'pre' como default se for passivo
+      rentabilidade_tipo: categoria === "ativo" ? "cdi" : "pre",
       regime_tributario: "progressivo",
       amortizacao_tipo: "SAC",
       percentual_inventario: 100,
       inventariar: false,
       investir_pos_morte: false,
       segurado: false,
-    },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
   });
 
   const {
@@ -111,7 +112,10 @@ export function AssetsLiabilitiesForm({
           ? maskCurrency((initialData.valor_parcela * 100).toFixed(0))
           : "",
         percentual_inventario: initialData.percentual_inventario ?? 100,
-        rentabilidade_tipo: initialData.rentabilidade_tipo || "cdi",
+        // Garante que o tipo de rentabilidade seja válido
+        rentabilidade_tipo:
+          initialData.rentabilidade_tipo ||
+          (categoria === "ativo" ? "cdi" : "pre"),
         regime_tributario: initialData.regime_tributario || "progressivo",
         amortizacao_tipo: initialData.amortizacao_tipo || "SAC",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -140,6 +144,7 @@ export function AssetsLiabilitiesForm({
       familiar_id = Number(data.proprietario_select.replace("dep_", ""));
     }
 
+    // A correção do 'database.ts' resolve o erro do 'selic' aqui
     const payload: AssetPayload = {
       categoria,
       proprietario_tipo,
@@ -175,6 +180,7 @@ export function AssetsLiabilitiesForm({
 
     const success = await onSubmit(payload);
 
+    // Lógica de despesa automática para financiamentos/dívidas parceladas
     if (
       success &&
       categoria === "passivo" &&
@@ -229,8 +235,6 @@ export function AssetsLiabilitiesForm({
         >
           <input type="hidden" {...methods.register("tipo")} />
 
-          {/* Painéis */}
-
           {categoria === "passivo" && (
             <LiabilityPanel familiares={familiares} />
           )}
@@ -247,7 +251,6 @@ export function AssetsLiabilitiesForm({
             <PhysicalAssetPanel familiares={familiares} />
           )}
 
-          {/* Botões */}
           <div className={styles.actions}>
             <Button
               type="button"

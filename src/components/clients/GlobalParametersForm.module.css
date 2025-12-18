@@ -1,75 +1,105 @@
-/* src/components/settings/GlobalParametersForm.module.css */
+/* src/components/clients/GlobalParametersForm.module.css */
 
 .container {
-  font-family: inherit;
-  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.header {
+  margin-bottom: 0.5rem;
 }
 
 .title {
-  color: #2563eb;
   font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
 }
 
+.description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* --- ESTILO DO DISCLAIMER (O Laranja que você gostou) --- */
+.warningBox {
+  display: flex;
+  align-items: flex-start; /* Alinha ícone com a primeira linha de texto */
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-top: 1rem;
+  background-color: #fff7ed; /* Laranja bem clarinho */
+  border: 1px solid #fdba74; /* Laranja médio */
+  border-radius: 8px;
+  color: #9a3412; /* Texto Laranja escuro */
+  font-size: 0.9rem;
+  line-height: 1.4;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.warningBox strong {
+  font-weight: 600;
+  display: block; /* Quebra linha para o título do alerta, se quiser */
+  margin-bottom: 0.15rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* -------------------------------------------------------- */
+
 .card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: white;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
-  align-items: flex-start;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .fullWidth {
-  grid-column: 1 / -1;
+  width: 100%;
 }
 
 .actions {
   display: flex;
-  justify-content: flex-end; /* Alinha tudo à direita */
-  align-items: center; /* Centraliza verticalmente */
-  gap: 1rem; /* Espaço entre o link de reset e o botão salvar */
-
-  border-top: 1px solid #f1f5f9;
-  padding-top: 1.5rem;
+  justify-content: flex-end; /* Botões à direita */
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
   margin-top: 0.5rem;
 }
 
-/* ESTILO DO BOTÃO DE RESET */
 .resetButton {
   background: none;
   border: none;
-  font-size: 0.875rem; /* text-sm */
-  color: #64748b; /* slate-500 */
+  color: #6b7280;
+  font-size: 0.875rem;
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-color: transparent; /* Sublinhado invisível por padrão */
-  transition: all 0.2s;
-  padding: 0.5rem;
+  transition: color 0.2s;
 }
 
 .resetButton:hover {
-  color: #0f172a; /* slate-900 */
-  text-decoration-color: #0f172a; /* Aparece ao passar o mouse */
+  color: #ef4444; /* Vermelho ao passar o mouse */
 }
 
-@media (max-width: 640px) {
-  .card {
-    grid-template-columns: 1fr;
-  }
-
-  .actions {
-    flex-direction: column-reverse; /* No celular, o Salvar fica em cima */
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .resetButton {
-    text-align: center;
-  }
+.resetButton:disabled {
+  color: #d1d5db;
+  cursor: not-allowed;
+  text-decoration: none;
 }

@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
-import type { ItemPatrimonio } from "../types/database";
+import type { ItemAtivoPassivo } from "../types/database"; // <--- TIPO NOVO
 import { useToast } from "../components/ui/toast/ToastContext";
 
 export function usePatrimonio() {
-  const [itens, setItens] = useState<ItemPatrimonio[]>([]);
+  const [itens, setItens] = useState<ItemAtivoPassivo[]>([]);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
@@ -12,9 +12,9 @@ export function usePatrimonio() {
   const fetchPatrimonio = useCallback(async (perfilId: string) => {
     setLoading(true);
     try {
-      // Nota: Você precisará criar a tabela 'patrimonio' no Supabase depois
+      // Sugestão: Nome da tabela unificada no banco pode ser 'itens_financeiros'
       const { data, error } = await supabase
-        .from("patrimonio")
+        .from("itens_financeiros")
         .select("*")
         .eq("perfil_id", perfilId)
         .order("valor", { ascending: false });
@@ -23,41 +23,64 @@ export function usePatrimonio() {
       setItens(data || []);
     } catch (error) {
       console.error(error);
-      // Mock de dados caso a tabela não exista ainda, para visualizarmos o layout
-      // Remova isso quando criar a tabela
+
+      // --- MOCK ATUALIZADO PARA O NOVO TIPO ---
       setItens([
         {
           id: 1,
-          perfilId,
+          perfil_id: perfilId,
+          proprietario_tipo: "titular",
+          familiar_id: null,
+          categoria: "ativo",
+          tipo: "Aplicação Financeira", // Antigo 'investimento'
           nome: "CDB Liquidez Diária",
           valor: 50000,
-          categoria: "investimento",
+          inventariar: true,
+          investir_pos_morte: false,
         },
         {
           id: 2,
-          perfilId,
+          perfil_id: perfilId,
+          proprietario_tipo: "titular",
+          familiar_id: null,
+          categoria: "ativo",
+          tipo: "Previdência", // Antigo 'previdencia'
           nome: "VGBL XP",
           valor: 120000,
-          categoria: "previdencia",
+          inventariar: false, // Previdência geralmente não entra em inventário
+          investir_pos_morte: false,
+          regime_tributario: "regressivo",
         },
         {
           id: 3,
-          perfilId,
+          perfil_id: perfilId,
+          proprietario_tipo: "titular",
+          familiar_id: null,
+          categoria: "ativo",
+          tipo: "Imóvel", // Antigo 'imobilizado'
           nome: "Apartamento Centro",
           valor: 450000,
-          categoria: "imobilizado",
+          inventariar: true,
+          percentual_inventario: 100,
+          investir_pos_morte: false,
         },
         {
           id: 4,
-          perfilId,
-          nome: "Financiamento Carro",
-          valor: 35000,
+          perfil_id: perfilId,
+          proprietario_tipo: "titular",
+          familiar_id: null,
           categoria: "passivo",
+          tipo: "Financiamento",
+          nome: "Financiamento Carro",
+          valor: 35000, // Saldo Devedor
+          prazo_meses: 48,
+          valor_parcela: 1200,
+          amortizacao_tipo: "SAC",
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ] as any);
+      ] as ItemAtivoPassivo[]);
+      // Removi o 'as any' forçado para garantir que o mock bata com a interface
 
-      // toast.error("Erro ao carregar patrimônio."); // Descomentar quando backend estiver ok
+      // toast.error("Erro ao carregar patrimônio.");
     } finally {
       setLoading(false);
     }
@@ -65,13 +88,18 @@ export function usePatrimonio() {
 
   const deleteItem = async (id: number) => {
     try {
-      const { error } = await supabase.from("patrimonio").delete().eq("id", id);
+      const { error } = await supabase
+        .from("itens_financeiros")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
       setItens((prev) => prev.filter((i) => i.id !== id));
       toast.success("Item removido.");
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao remover item.");
+      // Mock visual de deleção
+      setItens((prev) => prev.filter((i) => i.id !== id));
+      toast.success("Item removido (Mock).");
     }
   };
 

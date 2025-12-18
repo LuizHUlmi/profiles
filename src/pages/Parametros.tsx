@@ -1,25 +1,44 @@
-import { useState } from "react";
-import { Input } from "../components/ui/input/Input"; // Seu componente Input padronizado
+// src/pages/Parametros.tsx
+import { useState, useEffect } from "react";
+import { Input } from "../components/ui/input/Input";
 import { Button } from "../components/ui/button/Button";
-import { Save, TrendingUp, DollarSign, Percent } from "lucide-react";
+import { Save, TrendingUp, Percent } from "lucide-react";
 import styles from "./Parametros.module.css";
 import { useToast } from "../components/ui/toast/ToastContext";
+import { usePremissas } from "../hooks/usePremissas"; // <--- Hook reaproveitado!
 
 export function Parametros() {
   const toast = useToast();
-  const [loading, setLoading] = useState(false);
+  // Usamos o hook passando profileId = NULL para indicar que é o SISTEMA
+  const { loading, fetchPremissas, savePremissas } = usePremissas();
 
-  // Estados locais apenas para visualização por enquanto
   const [values, setValues] = useState({
-    selic: "10.75",
+    selic: "",
+    inflacao: "",
+    custo_inventario_padrao: "", // Antigo 'taxa_adm_padrao' ou similar
+    // Campos visuais extras (ainda não salvam no banco, mantive como placeholder)
     cdi: "10.65",
-    ipca: "4.50",
     poupanca: "6.17",
     igpm: "3.50",
     tr: "0.00",
-    taxa_adm_padrao: "1.00",
-    idade_aposentadoria_padrao: "65",
   });
+
+  // Carregar valores do banco ao abrir
+  useEffect(() => {
+    async function load() {
+      // Busca premissas do sistema (perfilId = "")
+      // O hook vai retornar o registro onde perfil_id é NULL
+      const data = await fetchPremissas(null);
+
+      setValues((prev) => ({
+        ...prev,
+        selic: String(data.selic),
+        inflacao: String(data.inflacao),
+        custo_inventario_padrao: String(data.custo_inventario_padrao),
+      }));
+    }
+    load();
+  }, [fetchPremissas]);
 
   const handleChange = (field: string, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -27,23 +46,31 @@ export function Parametros() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    // Simulação de delay de salvamento
-    setTimeout(() => {
-      setLoading(false);
-      toast.success("Parâmetros globais atualizados com sucesso!");
-    }, 1000);
+    // Prepara payload apenas com o que existe no banco
+    const payload = {
+      selic: Number(values.selic),
+      inflacao: Number(values.inflacao),
+      custo_inventario_padrao: Number(values.custo_inventario_padrao),
+    };
+
+    // Salva passando NULL como ID para indicar "Global do Sistema"
+    // O hook savePremissas já trata null como "perfil_id IS NULL"
+    const sucesso = await savePremissas(null, payload);
+
+    if (sucesso) {
+      toast.success("Parâmetros globais do sistema atualizados!");
+    }
   };
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>Parâmetros Globais</h1>
+          <h1 className={styles.title}>Parâmetros Globais do Sistema</h1>
           <p className={styles.subtitle}>
-            Defina as premissas econômicas que impactarão as simulações de todos
-            os clientes.
+            Defina as premissas econômicas padrão. Elas serão usadas para todos
+            os clientes que não tiverem uma configuração personalizada.
           </p>
         </div>
         <Button
@@ -51,18 +78,18 @@ export function Parametros() {
           loading={loading}
           icon={<Save size={18} />}
         >
-          Salvar Alterações
+          Salvar Padrões
         </Button>
       </header>
 
       <form className={styles.grid}>
-        {/* CARD 1: INDICADORES MACROECONÔMICOS */}
+        {/* CARD 1: INDICADORES PRINCIPAIS (Conectados ao Banco) */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.iconBox}>
               <TrendingUp size={20} />
             </div>
-            <h3>Indicadores de Mercado (Anual)</h3>
+            <h3>Indicadores Chave (Salvos no Banco)</h3>
           </div>
           <div className={styles.cardBody}>
             <Input
@@ -71,89 +98,64 @@ export function Parametros() {
               value={values.selic}
               onChange={(e) => handleChange("selic", e.target.value)}
               type="number"
-            />
-            <Input
-              label="CDI (%)"
-              placeholder="0.00"
-              value={values.cdi}
-              onChange={(e) => handleChange("cdi", e.target.value)}
-              type="number"
+              step="0.01"
             />
             <Input
               label="IPCA - Inflação (%)"
               placeholder="0.00"
-              value={values.ipca}
-              onChange={(e) => handleChange("ipca", e.target.value)}
+              value={values.inflacao}
+              onChange={(e) => handleChange("inflacao", e.target.value)}
               type="number"
+              step="0.01"
             />
             <Input
-              label="IGP-M (%)"
-              placeholder="0.00"
-              value={values.igpm}
-              onChange={(e) => handleChange("igpm", e.target.value)}
+              label="Custo Inventário Padrão (%)"
+              placeholder="Ex: 15.0"
+              value={values.custo_inventario_padrao}
+              onChange={(e) =>
+                handleChange("custo_inventario_padrao", e.target.value)
+              }
               type="number"
+              step="0.1"
             />
           </div>
         </div>
 
-        {/* CARD 2: TAXAS BANCÁRIAS E OUTROS */}
-        <div className={styles.card}>
+        {/* CARD 2: OUTROS INDICADORES (Ainda Visuais/Mock) */}
+        <div className={styles.card} style={{ opacity: 0.7 }}>
           <div className={styles.cardHeader}>
             <div
               className={styles.iconBox}
-              style={{ backgroundColor: "#ecfdf5", color: "#059669" }}
-            >
-              <DollarSign size={20} />
-            </div>
-            <h3>Taxas de Referência</h3>
-          </div>
-          <div className={styles.cardBody}>
-            <Input
-              label="Poupança (a.a.)"
-              placeholder="0.00"
-              value={values.poupanca}
-              onChange={(e) => handleChange("poupanca", e.target.value)}
-              type="number"
-            />
-            <Input
-              label="Taxa Referencial (TR)"
-              placeholder="0.00"
-              value={values.tr}
-              onChange={(e) => handleChange("tr", e.target.value)}
-              type="number"
-            />
-          </div>
-        </div>
-
-        {/* CARD 3: PREMISSAS DO SISTEMA */}
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <div
-              className={styles.iconBox}
-              style={{ backgroundColor: "#fff7ed", color: "#ea580c" }}
+              style={{ backgroundColor: "#f3f4f6", color: "#6b7280" }}
             >
               <Percent size={20} />
             </div>
-            <h3>Padrões do Sistema</h3>
+            <h3>Outros Indicadores (Futuro)</h3>
           </div>
           <div className={styles.cardBody}>
             <Input
-              label="Taxa Adm. Padrão (%)"
-              placeholder="Ex: 1.0"
-              value={values.taxa_adm_padrao}
-              onChange={(e) => handleChange("taxa_adm_padrao", e.target.value)}
-              type="number"
+              label="CDI (%)"
+              value={values.cdi}
+              onChange={(e) => handleChange("cdi", e.target.value)}
+              disabled
+              tooltip="Será calculado automaticamente baseado na Selic no futuro"
             />
             <Input
-              label="Idade Aposentadoria Padrão"
-              placeholder="Ex: 65"
-              value={values.idade_aposentadoria_padrao}
-              onChange={(e) =>
-                handleChange("idade_aposentadoria_padrao", e.target.value)
-              }
-              type="number"
+              label="Poupança (%)"
+              value={values.poupanca}
+              onChange={(e) => handleChange("poupanca", e.target.value)}
+              disabled
             />
           </div>
+          <p
+            style={{
+              fontSize: "0.8rem",
+              color: "#888",
+              padding: "0 1rem 1rem",
+            }}
+          >
+            * Estes campos ainda não estão salvando no banco nesta versão.
+          </p>
         </div>
       </form>
     </div>
