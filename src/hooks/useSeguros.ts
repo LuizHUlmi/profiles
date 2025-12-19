@@ -1,63 +1,89 @@
 // src/hooks/useSeguros.ts
+
 import { useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../components/ui/toast/ToastContext";
 import type { ItemSeguro } from "../types/database";
 
-export function useSeguros(perfilId: string) {
+export function useSeguros(profileId: string) {
   const [seguros, setSeguros] = useState<ItemSeguro[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const toast = useToast();
 
   const fetchSeguros = useCallback(async () => {
-    if (!perfilId) return;
+    if (!profileId) return;
     setLoading(true);
     const { data, error } = await supabase
-      .from("seguros")
+      .from("seguros") // Verifique se o nome da tabela é 'seguros' ou 'patrimonio_seguros' no seu banco
       .select("*")
-      .eq("perfil_id", perfilId)
+      .eq("perfil_id", profileId)
       .order("id", { ascending: true });
 
     if (error) {
       console.error("Erro ao buscar seguros:", error);
+      toast.error("Erro ao carregar proteções.");
     } else {
       setSeguros(data || []);
     }
     setLoading(false);
-  }, [perfilId]);
+  }, [profileId, toast]);
 
-  const addSeguro = async (
-    novoSeguro: Omit<ItemSeguro, "id" | "perfil_id">
-  ) => {
-    const { error } = await supabase.from("seguros").insert({
-      perfil_id: perfilId,
-      ...novoSeguro,
-    });
+  const addSeguro = async (dados: Partial<ItemSeguro>) => {
+    try {
+      const { error } = await supabase.from("seguros").insert({
+        perfil_id: profileId,
+        ...dados,
+      });
 
-    if (error) {
-      console.error("Erro add seguro:", error);
-      // USO CORRETO
-      toast.error("Erro ao adicionar seguro");
+      if (error) throw error;
+      toast.success("Proteção adicionada com sucesso!");
+      fetchSeguros();
+      return true;
+    } catch (error) {
+      console.error("Erro ao adicionar:", error);
+      toast.error("Erro ao salvar proteção.");
       return false;
     }
-
-    // USO CORRETO
-    toast.success("Seguro adicionado!");
-    fetchSeguros();
-    return true;
   };
 
-  const deleteSeguro = async (id: number) => {
-    const { error } = await supabase.from("seguros").delete().eq("id", id);
-    if (error) {
-      // USO CORRETO
-      toast.error("Erro ao excluir");
-    } else {
-      // USO CORRETO
-      toast.success("Seguro removido");
+  // --- NOVA FUNÇÃO DE UPDATE ---
+  const updateSeguro = async (id: number, dados: Partial<ItemSeguro>) => {
+    try {
+      const { error } = await supabase
+        .from("seguros")
+        .update(dados)
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Proteção atualizada com sucesso!");
       fetchSeguros();
+      return true;
+    } catch (error) {
+      console.error("Erro ao atualizar:", error);
+      toast.error("Erro ao atualizar proteção.");
+      return false;
+    }
+  };
+  // -----------------------------
+
+  const deleteSeguro = async (id: number) => {
+    try {
+      const { error } = await supabase.from("seguros").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Proteção removida.");
+      setSeguros((prev) => prev.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+      toast.error("Erro ao excluir.");
     }
   };
 
-  return { seguros, loading, fetchSeguros, addSeguro, deleteSeguro };
+  return {
+    seguros,
+    loading,
+    fetchSeguros,
+    addSeguro,
+    updateSeguro, // <--- Não esqueça de exportar
+    deleteSeguro,
+  };
 }

@@ -1,0 +1,142 @@
+/* src/components/education/EducacaoCard.module.css */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+  gap: 1.25rem;
+  position: relative;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  border-color: var(--primary-light, #bfdbfe);
+}
+
+/* --- LINHA SUPERIOR (Topo) --- */
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 0.75rem;
+}
+
+/* Grupo Esquerda (Ícone + Textos) */
+.infoGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Container do Ícone (Igual ao Patrimônio) */
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  width: 40px;
+  height: 40px;
+  background-color: #f0f9ff; /* Azul bem claro */
+  border-radius: 8px;
+  flex-shrink: 0;
+  margin-top: -2px;
+}
+
+.textInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Grupo Direita (Ações) */
+.actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  margin-top: -4px;
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0.4rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtn:hover {
+  background-color: #f0f9ff;
+  color: var(--primary);
+}
+
+.deleteBtn:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+/* --- LINHA INFERIOR (Valor) --- */
+.bottomRow {
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+}
+
+.valueLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary); /* Slate-900 */
+  letter-spacing: -0.5px;
+}
+
+.secondaryValue {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

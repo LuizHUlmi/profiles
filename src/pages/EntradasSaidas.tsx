@@ -7,34 +7,32 @@ import { useFluxoCaixa } from "../hooks/useFluxoCaixa";
 import { useFamily } from "../hooks/useFamily";
 import { useCashFlowProjection } from "../hooks/useCashFlowProjection";
 import { CashFlowChart } from "../components/financial/grafico/CashFlowChart";
-
-import { Button } from "../components/ui/button/Button";
 import { Modal } from "../components/ui/modal/Modal";
 import { FluxoCaixaForm } from "../components/financial/FluxoCaixaForm";
-import { Plus, TrendingUp, TrendingDown, Trash2, Pencil } from "lucide-react";
+import { ClientSelectionPlaceholder } from "../components/ui/placeholders/ClientSelectionPlaceholder";
+import { FluxoCaixaColuna } from "../components/financial/FluxoCaixaColuna"; // <--- Novo Componente
+import styles from "./EntradasSaidas.module.css";
 import type { ItemFluxoCaixa } from "../types/database";
 
 export function EntradasSaidas() {
   const { activeClientId } = useActiveClient();
 
-  // --- HOOKS DE DADOS ---
+  // Hooks
   const { items, fetchItems, addItem, updateItem, deleteItem, loading } =
     useFluxoCaixa(activeClientId || "");
   const { familiares, fetchFamily } = useFamily(activeClientId || "");
 
-  // --- ESTADOS LOCAIS ---
+  // Estados Locais
   const [modalType, setModalType] = useState<"receita" | "despesa" | null>(
     null
   );
   const [itemToEdit, setItemToEdit] = useState<ItemFluxoCaixa | null>(null);
-
-  // Estado para armazenar dados vitais do perfil (para o gráfico)
   const [profileData, setProfileData] = useState<{
     birthDate?: string;
     lifeExpectancy?: number;
   }>({});
 
-  // 1. Carrega dados do Perfil (Data Nascimento e Expectativa)
+  // Efeitos
   useEffect(() => {
     async function loadProfile() {
       if (!activeClientId) return;
@@ -43,18 +41,15 @@ export function EntradasSaidas() {
         .select("data_nascimento, expectativa_vida")
         .eq("id", activeClientId)
         .single();
-
-      if (data) {
+      if (data)
         setProfileData({
           birthDate: data.data_nascimento,
           lifeExpectancy: data.expectativa_vida,
         });
-      }
     }
     loadProfile();
   }, [activeClientId]);
 
-  // 2. Carrega listas ao mudar o cliente
   useEffect(() => {
     if (activeClientId) {
       fetchItems();
@@ -62,15 +57,14 @@ export function EntradasSaidas() {
     }
   }, [activeClientId, fetchItems, fetchFamily]);
 
-  // 3. Gera os dados da Projeção para o Gráfico (incluindo o Saldo/Balances)
+  // Projeção
   const { categories, incomes, expenses, balances } = useCashFlowProjection({
     items,
     birthDate: profileData.birthDate,
     lifeExpectancy: profileData.lifeExpectancy,
   });
 
-  // --- HANDLERS ---
-
+  // Handlers
   const handleEdit = (item: ItemFluxoCaixa) => {
     setItemToEdit(item);
     setModalType(item.tipo);
@@ -87,18 +81,9 @@ export function EntradasSaidas() {
     return await addItem(data);
   };
 
-  // Formata moeda para exibição
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
-
-  // --- CÁLCULOS DE TOTAIS (PARA O CABEÇALHO) ---
+  // Totais e Filtros
   const receitas = items.filter((i) => i.tipo === "receita");
   const despesas = items.filter((i) => i.tipo === "despesa");
-
   const totalReceitas = receitas.reduce(
     (acc, item) => acc + item.valor_mensal,
     0
@@ -108,354 +93,63 @@ export function EntradasSaidas() {
     0
   );
 
-  // --- RENDERIZAÇÃO ---
-
   if (!activeClientId) {
     return (
-      <div
-        style={{
-          padding: "2rem",
-          textAlign: "center",
-          color: "var(--text-secondary)",
-        }}
-      >
-        Selecione um cliente na barra superior para gerenciar o fluxo de caixa.
-      </div>
+      <ClientSelectionPlaceholder
+        title="Fluxo de Caixa"
+        message="Selecione um cliente para gerenciar as Receitas e Despesas mensais."
+      />
     );
   }
 
-  // Componente interno de Lista para evitar repetição de código
-  const ListaItens = ({
-    lista,
-    corIcone,
-  }: {
-    lista: ItemFluxoCaixa[];
-    corIcone: string;
-  }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      {lista.length === 0 && (
-        <p style={{ color: "#888", fontStyle: "italic", fontSize: "0.9rem" }}>
-          Nenhum item cadastrado.
-        </p>
-      )}
-
-      {lista.map((item) => {
-        // Lógica para definir o texto e a cor do Badge de Proprietário
-        let labelProprietario = "Desconhecido";
-        let badgeColor = "#f3f4f6";
-        let badgeTextColor = "#374151";
-
-        if (item.proprietario_tipo === "titular") {
-          labelProprietario = "Titular";
-          badgeColor = "#dbeafe";
-          badgeTextColor = "#1e40af";
-        } else if (item.proprietario_tipo === "casal") {
-          labelProprietario = "Casal";
-          badgeColor = "#fae8ff";
-          badgeTextColor = "#86198f";
-        } else if (item.proprietario_tipo === "familia") {
-          labelProprietario = "Família";
-          badgeColor = "#ffedd5";
-          badgeTextColor = "#9a3412";
-        } else if (item.proprietario_tipo === "dependente") {
-          const nome = familiares.find((f) => f.id === item.familiar_id)?.nome;
-          labelProprietario = nome || "Familiar";
-        }
-
-        return (
-          <div
-            key={item.id}
-            style={{
-              backgroundColor: "white",
-              padding: "1rem",
-              borderRadius: "8px",
-              border: "1px solid #e0e0e0",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-            }}
-          >
-            {/* Infos do Item */}
-            <div>
-              <div
-                style={{
-                  fontWeight: 600,
-                  color: "#333",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "4px",
-                }}
-              >
-                {item.descricao}
-                <span
-                  style={{
-                    fontSize: "0.7rem",
-                    fontWeight: 600,
-                    backgroundColor: badgeColor,
-                    color: badgeTextColor,
-                    padding: "2px 8px",
-                    borderRadius: "12px",
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {labelProprietario}
-                </span>
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "#666" }}>
-                Início:{" "}
-                <strong>
-                  {item.inicio_tipo === "ano"
-                    ? item.inicio_valor
-                    : `${item.inicio_valor} anos`}
-                </strong>
-                {" • "}
-                Duração: <strong>{item.duracao_anos} anos</strong>
-                {" • "}
-                Correção:{" "}
-                {item.correcao_anual ? `${item.correcao_anual}%` : "IPCA"}
-              </div>
-            </div>
-
-            {/* Valor e Ações */}
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <span
-                style={{
-                  fontWeight: 700,
-                  color: corIcone,
-                  fontSize: "1rem",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {formatCurrency(item.valor_mensal)}
-              </span>
-              <div style={{ display: "flex", gap: "4px" }}>
-                <button
-                  onClick={() => handleEdit(item)}
-                  style={{
-                    border: "none",
-                    background: "none",
-                    cursor: "pointer",
-                    color: "#64748b",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  title="Editar"
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  onClick={() => deleteItem(item.id)}
-                  style={{
-                    border: "none",
-                    background: "none",
-                    cursor: "pointer",
-                    color: "#64748b",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  title="Excluir"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-
   return (
-    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-      {/* TÍTULO */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "2rem",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "1.5rem",
-            fontWeight: "700",
-            color: "var(--text-primary)",
-            margin: 0,
-          }}
-        >
-          Entradas e Saídas
-        </h2>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Entradas e Saídas</h2>
       </div>
 
-      {/* ÁREA DO GRÁFICO */}
-      <div
-        style={{
-          backgroundColor: "white",
-          padding: "1.5rem",
-          borderRadius: "8px",
-          border: "1px solid var(--border-color)",
-          marginBottom: "2rem",
-          boxShadow: "var(--shadow-sm)",
-        }}
-      >
+      <div className={styles.chartContainer}>
         {profileData.birthDate ? (
           <CashFlowChart
             categories={categories}
             incomes={incomes}
             expenses={expenses}
-            balances={balances} // <--- Passando a linha de Saldo Líquido
+            balances={balances}
           />
         ) : (
-          <div style={{ textAlign: "center", padding: "3rem", color: "#888" }}>
-            Complete o cadastro do cliente (Data de Nascimento) no menu "Dados
-            do Cliente" para ver a projeção gráfica.
+          <div className={styles.chartPlaceholder}>
+            Complete o cadastro do cliente (Data de Nascimento) para ver a
+            projeção.
           </div>
         )}
       </div>
 
-      {/* COLUNAS LADO A LADO */}
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}
-      >
-        {/* === COLUNA RECEITAS === */}
-        <div
-          style={{
-            backgroundColor: "var(--bg-page)",
-            padding: "1.5rem",
-            borderRadius: "8px",
-            border: "1px solid var(--border-color)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1.5rem",
-            }}
-          >
-            {/* Título com Total */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <h3
-                style={{
-                  margin: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  color: "var(--success)",
-                  fontSize: "1.1rem",
-                }}
-              >
-                <TrendingUp size={20} /> Receitas
-              </h3>
-              <span
-                style={{
-                  fontSize: "0.9rem",
-                  fontWeight: 700,
-                  backgroundColor: "#dcfce7",
-                  color: "#166534",
-                  padding: "2px 10px",
-                  borderRadius: "12px",
-                }}
-              >
-                {formatCurrency(totalReceitas)}
-              </span>
-            </div>
+      <div className={styles.columnsGrid}>
+        {/* COLUNA RECEITAS */}
+        <FluxoCaixaColuna
+          tipo="receita"
+          items={receitas}
+          total={totalReceitas}
+          loading={loading}
+          familiares={familiares}
+          onAdd={() => handleCreate("receita")}
+          onEdit={handleEdit}
+          onDelete={deleteItem}
+        />
 
-            <Button
-              size="sm"
-              onClick={() => handleCreate("receita")}
-              icon={<Plus size={16} />}
-              variant="success"
-            >
-              Nova
-            </Button>
-          </div>
-
-          {loading ? (
-            <div
-              style={{ textAlign: "center", padding: "2rem", color: "#888" }}
-            >
-              Carregando...
-            </div>
-          ) : (
-            <ListaItens lista={receitas} corIcone="var(--success)" />
-          )}
-        </div>
-
-        {/* === COLUNA DESPESAS === */}
-        <div
-          style={{
-            backgroundColor: "var(--bg-page)",
-            padding: "1.5rem",
-            borderRadius: "8px",
-            border: "1px solid var(--border-color)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1.5rem",
-            }}
-          >
-            {/* Título com Total */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <h3
-                style={{
-                  margin: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  color: "var(--danger)",
-                  fontSize: "1.1rem",
-                }}
-              >
-                <TrendingDown size={20} /> Despesas
-              </h3>
-              <span
-                style={{
-                  fontSize: "0.9rem",
-                  fontWeight: 700,
-                  backgroundColor: "#fee2e2",
-                  color: "#991b1b",
-                  padding: "2px 10px",
-                  borderRadius: "12px",
-                }}
-              >
-                {formatCurrency(totalDespesas)}
-              </span>
-            </div>
-
-            <Button
-              size="sm"
-              onClick={() => handleCreate("despesa")}
-              icon={<Plus size={16} />}
-              variant="danger"
-            >
-              Nova
-            </Button>
-          </div>
-
-          {loading ? (
-            <div
-              style={{ textAlign: "center", padding: "2rem", color: "#888" }}
-            >
-              Carregando...
-            </div>
-          ) : (
-            <ListaItens lista={despesas} corIcone="var(--danger)" />
-          )}
-        </div>
+        {/* COLUNA DESPESAS */}
+        <FluxoCaixaColuna
+          tipo="despesa"
+          items={despesas}
+          total={totalDespesas}
+          loading={loading}
+          familiares={familiares}
+          onAdd={() => handleCreate("despesa")}
+          onEdit={handleEdit}
+          onDelete={deleteItem}
+        />
       </div>
 
-      {/* MODAL (Criação e Edição) */}
       <Modal isOpen={!!modalType} onClose={() => setModalType(null)}>
         {modalType && (
           <FluxoCaixaForm

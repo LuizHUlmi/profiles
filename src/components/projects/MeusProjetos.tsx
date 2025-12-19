@@ -1,18 +1,20 @@
-import styles from "./MeusProjetos.module.css";
-import { ProjectCard } from "./ProjectCard";
-import { ProjectColumn } from "./ProjectColumn";
-import type { Projeto } from "../../types/database";
+// src/components/projects/MeusProjetos.tsx
 
-type MeusProjetosProps = {
+import { Plus } from "lucide-react";
+import { Button } from "../ui/button/Button";
+import { ProjetoCard } from "./ProjectCard";
+import type { Projeto } from "../../types/database";
+import styles from "./MeusProjetos.module.css";
+
+interface MeusProjetosProps {
   projects: Projeto[];
   activeProjectIds: number[];
   onAddClick: () => void;
-  onEditProject: (project: Projeto) => void;
+  onEditProject: (p: Projeto) => void;
   onDeleteProject: (id: number) => void;
   onToggleProject: (id: number, isActive: boolean) => void;
-  // NOVA PROP
   onToggleColumn: (priority: string, isActive: boolean) => void;
-};
+}
 
 export function MeusProjetos({
   projects,
@@ -21,71 +23,94 @@ export function MeusProjetos({
   onEditProject,
   onDeleteProject,
   onToggleProject,
-  onToggleColumn, // <--- Recebendo a função
+  onToggleColumn,
 }: MeusProjetosProps) {
-  const getProjectsByPriority = (priority: string) => {
-    return projects.filter((p) => p.prioridade === priority);
-  };
+  const vital = projects.filter((p) => p.prioridade === "vital");
+  const essencial = projects.filter((p) => p.prioridade === "essencial");
+  const desejavel = projects.filter((p) => p.prioridade === "desejavel");
 
-  const getTotalByPriority = (priority: string) => {
-    const total = getProjectsByPriority(priority)
-      .filter((p) => activeProjectIds.includes(p.id))
-      .reduce((acc, curr) => acc + curr.valor, 0);
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(total);
-  };
+  const renderColumn = (
+    title: string,
+    items: Projeto[],
+    priorityKey: string
+  ) => {
+    const allActive =
+      items.length > 0 && items.every((p) => activeProjectIds.includes(p.id));
 
-  // Verifica se TODOS os projetos desta prioridade estão ativos
-  const isColumnActive = (priority: string) => {
-    const columnProjects = getProjectsByPriority(priority);
-    if (columnProjects.length === 0) return false;
-    // Retorna true se TODOS os IDs da coluna estiverem na lista activeProjectIds
-    return columnProjects.every((p) => activeProjectIds.includes(p.id));
-  };
-
-  const renderColumn = (priority: string, label: string) => {
-    const columnProjects = getProjectsByPriority(priority);
+    // Define a classe da bolinha baseada na prioridade
+    const dotClass =
+      priorityKey === "vital"
+        ? styles.dotVital
+        : priorityKey === "essencial"
+        ? styles.dotEssencial
+        : styles.dotDesejavel;
 
     return (
-      <ProjectColumn
-        title={label}
-        totalValue={getTotalByPriority(priority)}
-        // O Switch Mestre fica ligado se todos os itens estiverem ligados
-        isChecked={isColumnActive(priority)}
-        // Ao clicar no mestre, chama a função em lote
-        onToggle={(checked) => onToggleColumn(priority, checked)}
-      >
-        {columnProjects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            title={project.nome}
-            value={project.valor}
-            details={project.prazo}
-            isChecked={activeProjectIds.includes(project.id)}
-            onToggle={(checked) => onToggleProject(project.id, checked)}
-            onEdit={() => onEditProject(project)}
-            onDelete={() => onDeleteProject(project.id)}
-          />
-        ))}
-      </ProjectColumn>
+      <div className={styles.column}>
+        {/* CABEÇALHO CINZA */}
+        <div className={styles.columnHeader}>
+          <div className={styles.titleGroup}>
+            <span className={`${styles.priorityDot} ${dotClass}`}></span>
+            <span className={styles.columnTitle}>{title}</span>
+          </div>
+
+          <div className={styles.headerActions}>
+            <span className={styles.countBadge}>{items.length}</span>
+            {items.length > 0 && (
+              <button
+                onClick={() => onToggleColumn(priorityKey, !allActive)}
+                className={styles.toggleBtn}
+                title={allActive ? "Desativar Todos" : "Ativar Todos"}
+              >
+                {allActive ? "Limpar" : "Todos"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* LISTA DE PROJETOS (COM PADDING) */}
+        <div className={styles.projectsList}>
+          {items.length === 0 ? (
+            <div className={styles.emptyState}>Nenhum projeto.</div>
+          ) : (
+            items.map((projeto) => (
+              <ProjetoCard
+                key={projeto.id}
+                projeto={projeto}
+                isActive={activeProjectIds.includes(projeto.id)}
+                onToggle={(isActive) => onToggleProject(projeto.id, isActive)}
+                onEdit={() => onEditProject(projeto)}
+                onDelete={() => onDeleteProject(projeto.id)}
+              />
+            ))
+          )}
+        </div>
+      </div>
     );
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3>Meus projetos (Biblioteca)</h3>
-        <button onClick={onAddClick} className={styles.addButton}>
-          +
-        </button>
+        <h3
+          style={{
+            margin: 0,
+            color: "var(--text-primary)",
+            fontSize: "1.25rem",
+            fontWeight: 600,
+          }}
+        >
+          Meus Projetos
+        </h3>
+        <Button onClick={onAddClick} icon={<Plus size={16} />}>
+          Novo Projeto
+        </Button>
       </div>
 
-      <div className={styles.projectsGrid}>
-        {renderColumn("essencial", "Essencial")}
-        {renderColumn("desejo", "Desejo")}
-        {renderColumn("sonho", "Sonho")}
+      <div className={styles.columnsGrid}>
+        {renderColumn("Vital", vital, "vital")}
+        {renderColumn("Essencial", essencial, "essencial")}
+        {renderColumn("Desejável", desejavel, "desejavel")}
       </div>
     </div>
   );

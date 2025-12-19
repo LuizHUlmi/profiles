@@ -1,21 +1,20 @@
+// src/pages/AtivosPassivos.tsx
+
 import { useActiveClient } from "../context/ActiveClientContext";
 import { GestaoPatrimonio } from "../components/patrimonio/GestaoPatrimonio";
-import { Users } from "lucide-react";
 import styles from "./AtivosPassivos.module.css";
+import { ClientSelectionPlaceholder } from "../components/ui/placeholders/ClientSelectionPlaceholder";
 
 export function AtivosPassivos() {
   const { activeClientId } = useActiveClient();
 
+  // MUDANÇA: Substituímos o HTML manual pelo componente padrão
   if (!activeClientId) {
     return (
-      <div className={styles.emptyState}>
-        <Users size={48} className={styles.emptyIcon} />
-        <h2 className={styles.emptyTitle}>Selecione um cliente</h2>
-        <p className={styles.emptyText}>
-          Selecione um cliente na barra superior para gerenciar seus ativos e
-          passivos.
-        </p>
-      </div>
+      <ClientSelectionPlaceholder
+        title="Estrutura Patrimonial"
+        message="Selecione um cliente na barra superior para gerenciar Investimentos, Imóveis e Dívidas."
+      />
     );
   }
 

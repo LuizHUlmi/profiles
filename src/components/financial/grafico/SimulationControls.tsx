@@ -1,22 +1,22 @@
-// src/components/simulacao/SimulacaoControls.tsx
+// src/components/financial/grafico/SimulationControls.tsx
 
-import { SliderControl } from "../../ui/slider/Slider";
-import styles from "./ControleGrafico.module.css"; // Se renomeou para SimulacaoControls.module.css, ajuste aqui
+import { Sliders, Save } from "lucide-react";
+import { Button } from "../../ui/button/Button";
+import { maskCurrency, unmaskCurrency } from "../../../utils/masks";
+import styles from "./SimulationControls.module.css";
 
-type SimulacaoControlsProps = {
+interface SimulationControlsProps {
   idade: number;
-  setIdade: (value: number) => void;
+  setIdade: (v: number) => void;
   renda: number;
-  setRenda: (value: number) => void;
+  setRenda: (v: number) => void;
   outrasRendas: number;
-  setOutrasRendas: (value: number) => void;
+  setOutrasRendas: (v: number) => void;
   investimento: number;
-  setInvestimento: (value: number) => void;
-
-  // Novas props para o botão de salvar
+  setInvestimento: (v: number) => void;
   onSave: () => void;
-  isSaving?: boolean;
-};
+  isSaving: boolean;
+}
 
 export function SimulacaoControls({
   idade,
@@ -28,72 +28,87 @@ export function SimulacaoControls({
   investimento,
   setInvestimento,
   onSave,
-  isSaving = false,
-}: SimulacaoControlsProps) {
+  isSaving,
+}: SimulationControlsProps) {
+  const renderControl = (
+    label: string,
+    value: number,
+    setValue: (v: number) => void,
+    min: number,
+    max: number,
+    step: number,
+    isCurrency: boolean = true
+  ) => (
+    <div className={styles.controlWrapper}>
+      <div className={styles.controlHeader}>
+        <span className={styles.label}>{label}</span>
+        <input
+          type="text"
+          className={styles.valueInput}
+          value={isCurrency ? maskCurrency(value.toFixed(2)) : value}
+          // --- MUDANÇA AQUI: Seleciona tudo ao clicar ---
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => {
+            const rawValue = e.target.value;
+            if (isCurrency) {
+              setValue(unmaskCurrency(rawValue));
+            } else {
+              setValue(Number(rawValue));
+            }
+          }}
+        />
+      </div>
+
+      <input
+        type="range"
+        className={styles.slider}
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => setValue(Number(e.target.value))}
+      />
+    </div>
+  );
+
   return (
     <div className={styles.container}>
-      <h4>Configurar simulação</h4>
+      <div className={styles.header}>
+        <h3 className={styles.title}>
+          <Sliders size={20} />
+          Parâmetros
+        </h3>
+        <p className={styles.subtitle}>Arraste para simular cenários.</p>
+      </div>
 
-      {/* 1. Slider de Idade */}
-      <SliderControl
-        label="Idade aposentadoria"
-        value={idade}
-        onChange={setIdade}
-        min={50}
-        max={100}
-        type="number"
-        rightElement={
-          <button className={styles.editButton} title="Editar">
-            ✏️
-          </button>
-        }
-      />
+      {renderControl("Idade Aposentadoria", idade, setIdade, 40, 90, 1, false)}
+      {renderControl("Renda na Aposentadoria", renda, setRenda, 0, 50000, 500)}
+      {renderControl(
+        "Aporte Mensal",
+        investimento,
+        setInvestimento,
+        0,
+        30000,
+        100
+      )}
+      {renderControl(
+        "Outras Rendas (INSS)",
+        outrasRendas,
+        setOutrasRendas,
+        0,
+        20000,
+        100
+      )}
 
-      {/* 2. Slider de Renda */}
-      <SliderControl
-        label="Renda desejada"
-        value={renda}
-        onChange={setRenda}
-        min={0}
-        max={50000}
-        step={100}
-        type="currency"
-      />
-
-      {/* 3. Slider de Outras Fontes */}
-      <SliderControl
-        label="Outras fontes de renda"
-        value={outrasRendas}
-        onChange={setOutrasRendas}
-        min={0}
-        max={20000}
-        step={50}
-        type="currency"
-      />
-
-      {/* 4. Slider de Investimento */}
-      <SliderControl
-        label="Investimento mensal"
-        value={investimento}
-        onChange={setInvestimento}
-        min={0}
-        max={10000}
-        step={50}
-        type="currency"
-      />
-
-      <div className={styles.footer}>
-        <button
-          className={styles.saveButton}
+      <div className={styles.actions}>
+        <Button
           onClick={onSave}
-          disabled={isSaving}
-          style={{
-            opacity: isSaving ? 0.5 : 1,
-            cursor: isSaving ? "wait" : "pointer",
-          }}
+          loading={isSaving}
+          icon={<Save size={16} />}
+          style={{ width: "100%" }}
         >
-          {isSaving ? "Salvando..." : "Salvar meta"}
-        </button>
+          Salvar Cenário
+        </Button>
       </div>
     </div>
   );

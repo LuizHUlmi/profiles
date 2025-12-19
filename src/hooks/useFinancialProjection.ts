@@ -1,3 +1,5 @@
+// src/hooks/useFinancialProjection.ts
+
 import { useMemo } from "react";
 import type { Projeto } from "../types/database";
 
@@ -11,6 +13,7 @@ type ProjectionParams = {
   expectativaVida?: number;
   projects?: Projeto[];
   activeProjectIds?: number[];
+  allowNegative?: boolean; // <--- NOVO: Controle para permitir saldo negativo
 };
 
 export function useFinancialProjection({
@@ -23,6 +26,7 @@ export function useFinancialProjection({
   expectativaVida = 100,
   projects = [],
   activeProjectIds = [],
+  allowNegative = false, // Padrão: não permite negativo (trava em 0)
 }: ProjectionParams) {
   const projectionData = useMemo(() => {
     // 1. Definições de Tempo
@@ -32,9 +36,11 @@ export function useFinancialProjection({
 
     const idadeFinal = expectativaVida;
     const anosParaSimular = idadeFinal - idadeAtual;
-    const totalMeses = anosParaSimular * 12;
 
-    // 2. Taxas
+    // Evita loop infinito ou negativo se a idade atual for maior que a expectativa
+    const totalMeses = Math.max(0, anosParaSimular * 12);
+
+    // 2. Taxas (Ex: 4.5% a.a. acima da inflação)
     const taxaJurosAnual = 0.045;
     const taxaJurosMensal = Math.pow(1 + taxaJurosAnual, 1 / 12) - 1;
 
@@ -80,42 +86,52 @@ export function useFinancialProjection({
       const idadeNoPonto = idadeAtual + Math.floor(i / 12);
 
       // A. Rendimento (Juros Compostos)
-      saldoBase = saldoBase * (1 + taxaJurosMensal);
-      saldoReal = saldoReal * (1 + taxaJurosMensal);
+      // Aplica juros apenas se o saldo for positivo (dívida geralmente tem juros diferentes,
+      // aqui assumimos que saldo negativo não rende a favor)
+      if (saldoBase > 0) saldoBase = saldoBase * (1 + taxaJurosMensal);
+      if (saldoReal > 0) saldoReal = saldoReal * (1 + taxaJurosMensal);
 
       // B. Aporte / Retirada (Fluxo de Vida)
       if (idadeNoPonto < idadeAposentadoria) {
+        // Fase de Acumulação
         saldoBase += investimentoMensal;
         saldoReal += investimentoMensal;
       } else {
-        const retirada = Math.max(0, rendaDesejada - outrasRendas);
-        saldoBase -= retirada;
-        saldoReal -= retirada;
+        // Fase de Usufruto (Aposentadoria)
+        const retiradaNecessaria = Math.max(0, rendaDesejada - outrasRendas);
+        saldoBase -= retiradaNecessaria;
+        saldoReal -= retiradaNecessaria;
       }
 
       // C. Projetos (Custo de Oportunidade)
       projetosAtivos.forEach((projeto) => {
-        // Se não tiver idade definida, assume que é AGORA (idadeAtual)
-        const idadeAlvo = projeto.idade_realizacao ?? idadeAtual;
+        // Verifica se chegamos no ano do projeto
+        const ehAnoDoProjeto = ano === projeto.ano_realizacao;
 
-        const ehAnoDoProjeto = idadeNoPonto === idadeAlvo;
-        const ehJaneiro = mes === 0;
+        // Desconta apenas em Janeiro do ano de realização para não descontar 12x
+        // OU se a simulação começar no meio do ano do projeto (i===0)
+        const deveDescontar =
+          (ehAnoDoProjeto && mes === 0) || (i === 0 && ehAnoDoProjeto);
 
-        // Desconta se for o início da simulação (agora) OU se for janeiro do ano alvo futuro
-        const deveDescontarAgora =
-          (i === 0 && ehAnoDoProjeto) || (i > 0 && ehAnoDoProjeto && ehJaneiro);
-
-        if (deveDescontarAgora) {
-          saldoReal -= projeto.valor;
+        if (deveDescontar) {
+          // Usa 'valor_total' conforme padronizado no banco
+          saldoReal -= projeto.valor_total;
         }
       });
 
-      // Travas visuais de zero (opcional, para gráfico não ficar negativo) // Desenvolver um botã para optar por usar ou não essa função
-      if (saldoBase < 0) saldoBase = 0;
-      if (saldoReal < 0) saldoReal = 0;
+      // D. Trava de Zero (Opcional)
+      if (!allowNegative) {
+        if (saldoBase < 0) saldoBase = 0;
+        if (saldoReal < 0) saldoReal = 0;
+      }
+
+      // Otimização de Gráfico:
+      // Para não pesar o ECharts com 800 pontos, podemos salvar apenas
+      // pontos anuais (Janeiro) OU manter mensal se performance não for problema.
+      // Vou manter mensal por enquanto para suavidade, mas se quiser otimizar, coloque: if (mes === 0) {...}
 
       labelsAge.push(idadeNoPonto);
-      labelsYear.push(`${monthNames[mes]}/${ano}`);
+      labelsYear.push(`${monthNames[mes]}/${ano}`); // Ex: Jan/2025
       saldoProjetado.push(Math.round(saldoBase));
       saldoComProjetosProjetado.push(Math.round(saldoReal));
     }
@@ -124,7 +140,7 @@ export function useFinancialProjection({
       ages: labelsAge,
       years: labelsYear,
       dataProjected: saldoProjetado, // Linha Azul (Referência)
-      dataWithProjects: saldoComProjetosProjetado, // Linha Laranja (Com os descontos dos projetos)
+      dataWithProjects: saldoComProjetosProjetado, // Linha Verde (Real)
     };
   }, [
     idadeAtual,
@@ -136,6 +152,7 @@ export function useFinancialProjection({
     expectativaVida,
     projects,
     activeProjectIds,
+    allowNegative, // Adicionado na dependência
   ]);
 
   return projectionData;

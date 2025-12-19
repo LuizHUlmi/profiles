@@ -1,15 +1,15 @@
-/* src/components/projects/FormNovoProjeto.module.css */
+/* src/components/education/EducacaoForm.module.css */
 
 .container {
-  min-width: 480px;
+  min-width: 480px; /* Um pouco mais largo para acomodar os grids */
   padding: 0.5rem;
 }
 
 .header {
   margin-top: 0;
+  color: var(--text-primary, #1e293b);
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-primary);
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -22,15 +22,15 @@
   gap: 1.25rem;
 }
 
-/* Grid para inputs lado a lado */
+/* Grid para colocar 2 inputs lado a lado */
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
-/* Caixa de destaque para dados financeiros/tempo */
-.highlightBox {
+/* Box de destaque para o Período (similar ao VigênciaCard do Seguro) */
+.periodoBox {
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -40,23 +40,20 @@
   gap: 1rem;
 }
 
-.boxTitle {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.periodoTitle {
+  font-size: 0.85rem;
   font-weight: 600;
   color: #64748b;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color, #e2e8f0);
 }

@@ -1,0 +1,92 @@
+/* src/components/protection/SeguroForm.module.css */
+
+.container {
+  min-width: 450px;
+  padding: 0.5rem;
+}
+
+.title {
+  margin-top: 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Área cinza de Vigência */
+.vigenciaCard {
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.vigenciaLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Estilo personalizado para o Radio Button parecer um Card clicável */
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  background-color: white;
+  border-color: #e2e8f0;
+}
+
+.radioLabel:hover {
+  border-color: var(--primary);
+  background-color: #f0f9ff;
+}
+
+.radioInput {
+  accent-color: var(--primary);
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.radioText {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.helperText {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+  font-style: italic;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}

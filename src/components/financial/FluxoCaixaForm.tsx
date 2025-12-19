@@ -3,28 +3,27 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Input } from "../ui/input/Input";
+import { Select } from "../ui/select/Select";
 import { Button } from "../ui/button/Button";
+import { TrendingUp, TrendingDown, Save, CalendarRange } from "lucide-react";
 import { maskCurrency, unmaskCurrency } from "../../utils/masks";
-import { Save } from "lucide-react";
 import type { Familiar, ItemFluxoCaixa } from "../../types/database";
+import styles from "./FluxoCaixaForm.module.css";
 
 type FluxoFormData = {
   proprietario_select: string;
   descricao: string;
   valor_mensal: string;
-  inicio_tipo: "ano" | "idade";
+  correcao_anual: string;
   inicio_valor: number;
   duracao_anos: number;
-  correcao_anual?: number;
 };
 
 interface FluxoCaixaFormProps {
   tipo: "receita" | "despesa";
   familiares: Familiar[];
-  onClose: () => void;
-  // Agora aceita initialData para edição
   initialData?: ItemFluxoCaixa | null;
-  // O submit pode ser create ou update, então o tipo do payload é genérico aqui
+  onClose: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (data: any) => Promise<boolean>;
 }
@@ -32,59 +31,52 @@ interface FluxoCaixaFormProps {
 export function FluxoCaixaForm({
   tipo,
   familiares,
-  onClose,
   initialData,
+  onClose,
   onSubmit,
 }: FluxoCaixaFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isReceita = tipo === "receita";
 
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     reset,
     formState: { errors },
   } = useForm<FluxoFormData>({
     defaultValues: {
-      inicio_tipo: "ano",
-      duracao_anos: 1,
       inicio_valor: new Date().getFullYear(),
+      duracao_anos: 1, // Padrão: 1 ano (pontual) ou recorrente curto
+      correcao_anual: "0",
     },
   });
 
-  // EFEITO: Preencher formulário se estiver editando
+  // --- POPULAR FORMULÁRIO (Edição) ---
   useEffect(() => {
     if (initialData) {
-      // 1. Reconstruir o valor do Select Inteligente
-      let propSelect = "titular";
+      let propValue = "titular";
+
+      // Lógica para recuperar o valor correto do select
       if (
         initialData.proprietario_tipo === "dependente" &&
         initialData.familiar_id
       ) {
-        propSelect = `dep_${initialData.familiar_id}`;
-      } else {
-        propSelect = initialData.proprietario_tipo; // titular, casal, familia
+        propValue = `dep_${initialData.familiar_id}`;
+      } else if (["casal", "familia"].includes(initialData.proprietario_tipo)) {
+        propValue = initialData.proprietario_tipo;
       }
 
-      // 2. Formatar moeda para o input (Input espera string mascarada "R$ 1.000,00")
-      // A maskCurrency espera uma string de digitos que será dividida por 100.
-      // Ex: 1000.00 -> "100000" -> mask -> "1.000,00"
-      const valorString = (initialData.valor_mensal * 100).toFixed(0);
-
       reset({
-        proprietario_select: propSelect,
+        proprietario_select: propValue,
         descricao: initialData.descricao,
-        valor_mensal: maskCurrency(valorString),
-        inicio_tipo: initialData.inicio_tipo,
+        valor_mensal: maskCurrency(initialData.valor_mensal.toFixed(2)),
+        correcao_anual: String(initialData.correcao_anual || 0),
         inicio_valor: initialData.inicio_valor,
         duracao_anos: initialData.duracao_anos,
-        correcao_anual: initialData.correcao_anual || undefined,
       });
     }
   }, [initialData, reset]);
-
-  const inicioTipo = watch("inicio_tipo");
 
   const handleFormSubmit = async (data: FluxoFormData) => {
     setIsSubmitting(true);
@@ -92,27 +84,24 @@ export function FluxoCaixaForm({
     let proprietario_tipo = "titular";
     let familiar_id: number | null = null;
 
-    if (data.proprietario_select === "titular") {
-      proprietario_tipo = "titular";
-    } else if (data.proprietario_select === "casal") {
-      proprietario_tipo = "casal";
-    } else if (data.proprietario_select === "familia") {
-      proprietario_tipo = "familia";
+    // Lógica inversa do Select
+    if (["titular", "casal", "familia"].includes(data.proprietario_select)) {
+      proprietario_tipo = data.proprietario_select;
     } else if (data.proprietario_select.startsWith("dep_")) {
       proprietario_tipo = "dependente";
       familiar_id = Number(data.proprietario_select.replace("dep_", ""));
     }
 
     const payload = {
-      tipo, // Mantém o tipo original ou o da prop
+      tipo, // 'receita' ou 'despesa'
       proprietario_tipo,
       familiar_id,
       descricao: data.descricao,
       valor_mensal: unmaskCurrency(data.valor_mensal),
-      inicio_tipo: data.inicio_tipo,
+      correcao_anual: Number(data.correcao_anual),
+      inicio_tipo: "ano", // Hardcoded para simplificar, mas poderia ser 'idade'
       inicio_valor: Number(data.inicio_valor),
       duracao_anos: Number(data.duracao_anos),
-      correcao_anual: data.correcao_anual ? Number(data.correcao_anual) : null,
     };
 
     const success = await onSubmit(payload);
@@ -121,138 +110,111 @@ export function FluxoCaixaForm({
   };
 
   return (
-    <div style={{ minWidth: "350px", padding: "0.5rem" }}>
-      <h3 style={{ marginTop: 0, textTransform: "capitalize" }}>
-        {initialData ? `Editar ${tipo}` : `Nova ${tipo}`}
+    <div className={styles.container}>
+      {/* HEADER DINÂMICO */}
+      <h3
+        className={`${styles.header} ${
+          isReceita ? styles.headerReceita : styles.headerDespesa
+        }`}
+      >
+        {isReceita ? <TrendingUp size={28} /> : <TrendingDown size={28} />}
+        {initialData
+          ? `Editar ${isReceita ? "Receita" : "Despesa"}`
+          : `Nova ${isReceita ? "Receita" : "Despesa"}`}
       </h3>
 
-      <form
-        onSubmit={handleSubmit(handleFormSubmit)}
-        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-      >
-        {/* SELECT INTELIGENTE */}
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}
+      <form onSubmit={handleSubmit(handleFormSubmit)} className={styles.form}>
+        {/* PROPRIETÁRIO */}
+        <Select
+          label="Responsável / Beneficiário"
+          {...register("proprietario_select", {
+            required: "Selecione o responsável",
+          })}
+          error={errors.proprietario_select?.message}
         >
-          <label style={{ fontSize: "0.9rem", fontWeight: 500, color: "#333" }}>
-            Proprietário
-          </label>
-          <select
-            {...register("proprietario_select", {
-              required: "Selecione a quem pertence",
-            })}
-            style={{
-              padding: "0.75rem",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-              backgroundColor: "white",
-            }}
-          >
-            <option value="">Selecione...</option>
-            <optgroup label="Geral">
-              <option value="titular">Titular (Eu)</option>
-              <option value="casal">Casal (Eu + Cônjuge)</option>
-              <option value="familia">Família (Todos)</option>
+          <option value="titular">Titular (Cliente)</option>
+          <option value="casal">Casal (Conjunto)</option>
+          <option value="familia">Família (Todos)</option>
+          {familiares.length > 0 && (
+            <optgroup label="Dependentes">
+              {familiares.map((f) => (
+                <option key={f.id} value={`dep_${f.id}`}>
+                  {f.nome}
+                </option>
+              ))}
             </optgroup>
-
-            {familiares.length > 0 && (
-              <optgroup label="Dependentes / Familiares">
-                {familiares.map((f) => (
-                  <option key={f.id} value={`dep_${f.id}`}>
-                    {f.nome} ({f.parentesco})
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </select>
-          {errors.proprietario_select && (
-            <span style={{ color: "red", fontSize: "0.8rem" }}>
-              Campo obrigatório
-            </span>
           )}
-        </div>
+        </Select>
 
+        {/* DESCRIÇÃO */}
         <Input
           label="Descrição"
-          placeholder="Ex: Salário, Aluguel..."
-          {...register("descricao", { required: "Obrigatório" })}
+          placeholder={
+            isReceita
+              ? "Ex: Salário, Aluguel Recebido..."
+              : "Ex: Aluguel, Mercado, Luz..."
+          }
+          {...register("descricao", { required: "Descrição obrigatória" })}
+          error={errors.descricao?.message}
         />
 
-        <Input
-          label="Valor Mensal"
-          placeholder="R$ 0,00"
-          {...register("valor_mensal", {
-            required: "Obrigatório",
-            onChange: (e) =>
-              setValue("valor_mensal", maskCurrency(e.target.value)),
-          })}
-        />
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "10px",
-          }}
-        >
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}
-          >
-            <label
-              style={{ fontSize: "0.9rem", fontWeight: 500, color: "#333" }}
-            >
-              Início por
-            </label>
-            <select
-              {...register("inicio_tipo")}
-              style={{
-                padding: "0.75rem",
-                borderRadius: "6px",
-                border: "1px solid #ccc",
-              }}
-            >
-              <option value="ano">Ano</option>
-              <option value="idade">Idade</option>
-            </select>
-          </div>
-
+        {/* VALOR E CORREÇÃO */}
+        <div className={styles.row}>
           <Input
-            label={inicioTipo === "ano" ? "Ano Início" : "Idade Início"}
-            type="number"
-            {...register("inicio_valor", { required: true, min: 0 })}
+            label="Valor Mensal"
+            placeholder="R$ 0,00"
+            {...register("valor_mensal", {
+              required: "Valor obrigatório",
+              onChange: (e) =>
+                setValue("valor_mensal", maskCurrency(e.target.value)),
+            })}
+            error={errors.valor_mensal?.message}
           />
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "10px",
-          }}
-        >
           <Input
-            label="Duração (Anos)"
+            label="Correção Anual (%)"
             type="number"
-            {...register("duracao_anos", { required: true, min: 1 })}
-          />
-
-          <Input
-            label="Correção (%)"
-            type="number"
-            step="0.01"
-            placeholder="IPCA"
+            step="0.1"
+            placeholder="Ex: IPCA (0)"
             {...register("correcao_anual")}
           />
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "10px",
-            marginTop: "1rem",
-          }}
-        >
+        {/* BOX DE TEMPO */}
+        <div className={styles.highlightBox}>
+          <h4 className={styles.boxTitle}>
+            <CalendarRange size={16} />
+            Duração e Vigência
+          </h4>
+
+          <div className={styles.row}>
+            <Input
+              label="Ano de Início"
+              type="number"
+              placeholder={`Ex: ${new Date().getFullYear()}`}
+              {...register("inicio_valor", {
+                required: "Ano obrigatório",
+                min: { value: 1900, message: "Ano inválido" },
+                max: { value: 2100, message: "Ano inválido" },
+              })}
+              error={errors.inicio_valor?.message}
+              style={{ backgroundColor: "white" }}
+            />
+            <Input
+              label="Duração (Anos)"
+              type="number"
+              placeholder="Ex: 1 (Pontual) ou 30 (Longo Prazo)"
+              {...register("duracao_anos", {
+                required: "Duração obrigatória",
+                min: { value: 1, message: "Mínimo 1 ano" },
+              })}
+              error={errors.duracao_anos?.message}
+              style={{ backgroundColor: "white" }}
+            />
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div className={styles.footer}>
           <Button
             type="button"
             variant="ghost"
@@ -265,6 +227,7 @@ export function FluxoCaixaForm({
             type="submit"
             loading={isSubmitting}
             icon={<Save size={16} />}
+            variant={isReceita ? "success" : "danger"} // Botão segue a cor do tipo
           >
             {initialData ? "Salvar Alterações" : "Salvar"}
           </Button>

@@ -1,4 +1,4 @@
-/* src/components/layout/Navbar.module.css */
+/* src/components/layout/navbar/Navbar.module.css */
 
 .navbar {
   background-color: var(--bg-card);
@@ -8,7 +8,7 @@
   align-items: center;
   gap: 1.5rem;
   box-shadow: var(--shadow-sm);
-  z-index: 10; /* Garante que fique acima do conteúdo ao rolar */
+  z-index: 10;
   position: sticky;
   top: 0;
 }
@@ -27,7 +27,7 @@
   display: flex;
   flex-direction: column;
   min-width: 200px;
-  flex: 1; /* Ocupa espaço disponível proporcionalmente */
+  flex: 1;
   max-width: 300px;
 }
 
@@ -41,6 +41,8 @@
   cursor: pointer;
   outline: none;
   transition: all 0.2s;
+  width: 100%; /* Garante que ocupe o wrapper */
+  appearance: none; /* Remove estilo padrão do browser */
 }
 
 .select:focus {
@@ -54,7 +56,6 @@
   background-color: #f9fafb;
 }
 
-/* Badge para identificar o nível do usuário logado */
 .badge {
   background-color: var(--primary);
   color: #fff;
@@ -65,4 +66,12 @@
   text-transform: uppercase;
   margin-right: 10px;
   align-self: center;
+}
+
+/* Necessário para posicionar o ícone de loading dentro do select */
+.selectWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
 }

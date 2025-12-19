@@ -1,44 +1,29 @@
 // src/components/projects/FormNovoProjeto.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../lib/supabase";
-import styles from "./FormNovoProjeto.module.css";
 import { Input } from "../ui/input/Input";
+import { Select } from "../ui/select/Select";
 import { Button } from "../ui/button/Button";
+import { Save, Target, DollarSign } from "lucide-react";
+import { useToast } from "../ui/toast/ToastContext";
 import { maskCurrency, unmaskCurrency } from "../../utils/masks";
 import type { Projeto } from "../../types/database";
-import {
-  Plane,
-  Car,
-  Home,
-  Users,
-  Monitor,
-  BookOpen,
-  Palette,
-  Briefcase,
-  Heart,
-  CircleHelp,
-  PiggyBank,
-  Target,
-} from "lucide-react";
+import styles from "./FormNovoProjeto.module.css";
 
-type FormNovoProjetoProps = {
+interface FormNovoProjetoProps {
   onClose: () => void;
   onSuccess: () => void;
   projectToEdit?: Projeto | null;
   ownerId: string;
-};
+}
 
 type ProjectFormData = {
   nome: string;
+  valor_total: string;
+  ano_realizacao: number;
   prioridade: string;
-  tipo: string;
-  valor: string;
-  prazo: string;
-  repeticao: string;
-  qtdRepeticoes: string;
-  idade_realizacao: string; // Vem como string do input
 };
 
 export function FormNovoProjeto({
@@ -48,170 +33,151 @@ export function FormNovoProjeto({
   ownerId,
 }: FormNovoProjetoProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
 
-  const defaultValues = {
-    prioridade: projectToEdit?.prioridade || "essencial",
-    tipo: projectToEdit?.tipo || "Outro",
-    prazo: "nao",
-    valor: projectToEdit ? maskCurrency(String(projectToEdit.valor * 100)) : "",
-    nome: projectToEdit?.nome || "",
-    // Carrega o valor existente se houver
-    idade_realizacao: projectToEdit?.idade_realizacao
-      ? String(projectToEdit.idade_realizacao)
-      : "",
-  };
-
-  const { register, handleSubmit, watch } = useForm<ProjectFormData>({
-    defaultValues,
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<ProjectFormData>({
+    defaultValues: {
+      nome: "",
+      valor_total: "",
+      ano_realizacao: new Date().getFullYear() + 1,
+      prioridade: "essencial",
+    },
   });
 
-  const selectedPrioridade = watch("prioridade");
-  const selectedTipo = watch("tipo");
-
-  const projectTypes = [
-    { icon: Plane, label: "Viagem" },
-    { icon: Car, label: "Veículo" },
-    { icon: Home, label: "Casa" },
-    { icon: Users, label: "Família" },
-    { icon: Monitor, label: "Eletrônico" },
-    { icon: BookOpen, label: "Educação" },
-    { icon: Palette, label: "Hobby" },
-    { icon: Briefcase, label: "Profissional" },
-    { icon: Heart, label: "Saúde" },
-    { icon: CircleHelp, label: "Outro" },
-    { icon: Target, label: "Ajuste da meta" },
-    { icon: PiggyBank, label: "Aportes" },
-  ];
+  // --- POPULAR FORMULÁRIO (Edição) ---
+  useEffect(() => {
+    if (projectToEdit) {
+      reset({
+        nome: projectToEdit.nome,
+        valor_total: maskCurrency(projectToEdit.valor_total.toFixed(2)),
+        ano_realizacao: projectToEdit.ano_realizacao,
+        prioridade: projectToEdit.prioridade,
+      });
+    }
+  }, [projectToEdit, reset]);
 
   const onSubmit = async (data: ProjectFormData) => {
     setIsSubmitting(true);
-
     try {
-      const valorNumerico = unmaskCurrency(data.valor);
-
-      // Converte a string para número (ou null se vazio)
-      const idadeRealizacaoNum = data.idade_realizacao
-        ? parseInt(data.idade_realizacao)
-        : null;
-
       const payload = {
-        nome: data.nome,
-        prioridade: data.prioridade,
-        tipo: data.tipo,
-        valor: valorNumerico,
-        prazo:
-          data.prazo === "sim"
-            ? `${data.repeticao} - ${data.qtdRepeticoes}x`
-            : "À vista",
         perfil_id: ownerId,
-        idade_realizacao: idadeRealizacaoNum,
+        nome: data.nome,
+        valor_total: unmaskCurrency(data.valor_total),
+        ano_realizacao: Number(data.ano_realizacao),
+        prioridade: data.prioridade,
       };
 
       if (projectToEdit) {
         const { error } = await supabase
-          .from("projetos")
+          .from("projetos_vida")
           .update(payload)
           .eq("id", projectToEdit.id);
         if (error) throw error;
+        toast.success("Projeto atualizado!");
       } else {
-        const { error } = await supabase.from("projetos").insert(payload);
+        const { error } = await supabase.from("projetos_vida").insert(payload);
         if (error) throw error;
+        toast.success("Projeto criado!");
       }
-
-      alert(projectToEdit ? "Projeto atualizado!" : "Projeto criado!");
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Erro:", error);
-      alert("Erro ao salvar projeto.");
+      console.error(error);
+      toast.error("Erro ao salvar projeto.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form className={styles.formContainer} onSubmit={handleSubmit(onSubmit)}>
-      <h3 style={{ marginTop: 0 }}>
-        {projectToEdit ? "Editar Projeto" : "Novo Projeto"}
+    <div className={styles.container}>
+      {/* HEADER */}
+      <h3 className={styles.header}>
+        <Target size={26} color="#0ea5e9" />
+        {projectToEdit ? "Editar Projeto" : "Novo Projeto de Vida"}
       </h3>
 
-      {/* Prioridade */}
-      <div className={styles.formSection}>
-        <label>Prioridade do projeto</label>
-        <div className={styles.buttonRadioGroup}>
-          {["essencial", "desejo", "sonho"].map((p) => (
-            <label key={p}>
-              <input type="radio" value={p} {...register("prioridade")} />
-              <span
-                className={selectedPrioridade === p ? styles.activeRadio : ""}
-              >
-                {p.charAt(0).toUpperCase() + p.slice(1)}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
+      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+        {/* NOME E PRIORIDADE */}
+        <Input
+          label="Nome do Objetivo"
+          placeholder="Ex: Casa na Praia, Intercâmbio, Trocar de Carro..."
+          {...register("nome", { required: "Nome é obrigatório" })}
+          error={errors.nome?.message}
+        />
 
-      {/* Tipos */}
-      <div className={styles.formSection}>
-        <label>Tipo do projeto</label>
-        <div className={styles.iconRadioGroup}>
-          {projectTypes.map((type) => (
-            <label key={type.label} className={styles.iconButton}>
-              <input type="radio" value={type.label} {...register("tipo")} />
-              <div
-                className={`${styles.iconContainer} ${
-                  selectedTipo === type.label ? styles.activeIcon : ""
-                }`}
-              >
-                <type.icon size={24} />
-              </div>
-              <span>{type.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Inputs */}
-      <div className={styles.formGrid}>
-        <div className={styles.fullWidth}>
-          <Input label="Nome" {...register("nome", { required: true })} />
-        </div>
-        <div>
-          <Input
-            label="Valor"
-            {...register("valor", {
-              required: true,
-              onChange: (e) => (e.target.value = maskCurrency(e.target.value)),
-            })}
-          />
-        </div>
-
-        {/* --- CAMPO NOVO AQUI --- */}
-        <div>
-          <Input
-            label="Idade de Realização"
-            type="number"
-            placeholder="Ex: 45"
-            {...register("idade_realizacao")}
-          />
-        </div>
-      </div>
-
-      <div className={styles.formFooter}>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onClose}
-          disabled={isSubmitting}
+        <Select
+          label="Nível de Prioridade"
+          {...register("prioridade")}
+          placeholder="Selecione a prioridade..."
         >
-          Cancelar
-        </Button>
+          <option value="vital">Vital (Indispensável)</option>
+          <option value="essencial">Essencial (Importante)</option>
+          <option value="desejavel">Desejável (Se sobrar dinheiro)</option>
+        </Select>
 
-        <Button type="submit" loading={isSubmitting}>
-          {projectToEdit ? "Salvar Alterações" : "Criar Projeto"}
-        </Button>
-      </div>
-    </form>
+        {/* BOX DE DESTAQUE (Financeiro e Tempo) */}
+        <div className={styles.highlightBox}>
+          <h4 className={styles.boxTitle}>
+            <DollarSign size={14} /> Planejamento Financeiro
+          </h4>
+
+          <div className={styles.row}>
+            <Input
+              label="Custo Total Estimado"
+              placeholder="R$ 0,00"
+              {...register("valor_total", {
+                required: "Valor obrigatório",
+                onChange: (e) =>
+                  setValue("valor_total", maskCurrency(e.target.value)),
+              })}
+              error={errors.valor_total?.message}
+              style={{ backgroundColor: "white" }} // Contraste dentro do box
+            />
+
+            <Input
+              label="Ano de Realização"
+              type="number"
+              placeholder={`Ex: ${new Date().getFullYear() + 2}`}
+              {...register("ano_realizacao", {
+                required: "Ano obrigatório",
+                min: {
+                  value: new Date().getFullYear(),
+                  message: "Ano inválido",
+                },
+                max: { value: 2100, message: "Ano muito distante" },
+              })}
+              error={errors.ano_realizacao?.message}
+              style={{ backgroundColor: "white" }}
+            />
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div className={styles.footer}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            loading={isSubmitting}
+            icon={<Save size={16} />}
+          >
+            {projectToEdit ? "Salvar Alterações" : "Criar Projeto"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 // src/hooks/useEducacao.ts
+
 import { useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../components/ui/toast/ToastContext";
@@ -50,7 +51,7 @@ export function useEducacao(perfilId: string) {
         descricao: `Educ - ${novoItem.nome}`,
         valor_mensal: novoItem.custo_mensal,
         inicio_tipo: "ano",
-        inicio_valor: novoItem.ano_inicio, // Começa no ano definido
+        inicio_valor: novoItem.ano_inicio,
         duracao_anos: novoItem.duracao_anos,
         proprietario_tipo:
           novoItem.beneficiario_tipo === "titular" ? "titular" : "dependente",
@@ -59,9 +60,6 @@ export function useEducacao(perfilId: string) {
 
       if (!fluxoError) {
         toast.success("Planejamento salvo e despesa criada no fluxo!");
-      } else {
-        toast.success("Planejamento salvo (mas erro ao criar fluxo).");
-        console.error(fluxoError);
       }
     } catch (err) {
       console.error(err);
@@ -69,6 +67,25 @@ export function useEducacao(perfilId: string) {
 
     fetchEducacao();
     return true;
+  };
+
+  // --- NOVA FUNÇÃO DE UPDATE ---
+  const updateEducacao = async (id: number, dados: Partial<ItemEducacao>) => {
+    try {
+      const { error } = await supabase
+        .from("planejamento_educacional")
+        .update(dados)
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Planejamento atualizado!");
+      fetchEducacao();
+      return true;
+    } catch (error) {
+      console.error("Erro update educacao:", error);
+      toast.error("Erro ao atualizar.");
+      return false;
+    }
   };
 
   const deleteEducacao = async (id: number) => {
@@ -84,5 +101,12 @@ export function useEducacao(perfilId: string) {
     }
   };
 
-  return { itens, loading, fetchEducacao, addEducacao, deleteEducacao };
+  return {
+    itens,
+    loading,
+    fetchEducacao,
+    addEducacao,
+    updateEducacao,
+    deleteEducacao,
+  };
 }

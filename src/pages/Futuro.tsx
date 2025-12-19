@@ -1,25 +1,29 @@
-// src/pages/Dashboard.tsx
+// src/pages/Futuro.tsx
 
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
-import { useFinancialProjection } from "../hooks/useFinancialProjection";
-import { useProjects } from "../hooks/useProjects";
-import { useToast } from "../components/ui/toast/ToastContext";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 import { calculateAge } from "../utils/date";
 
-// Componentes UI e Features
-import { FinancialChart } from "../components/financial/grafico/FinancialChart";
-import { MeusProjetos } from "../components/projects/MeusProjetos";
+// Hooks
+import { useFinancialProjection } from "../hooks/useFinancialProjection";
+import { useProjects } from "../hooks/useProjects";
+import { useActiveClient } from "../context/ActiveClientContext";
+import { useToast } from "../components/ui/toast/ToastContext";
 
+// Componentes
+import { FinancialChart } from "../components/financial/grafico/FinancialChart";
 import { SimulacaoControls } from "../components/financial/grafico/SimulationControls";
+import { MeusProjetos } from "../components/projects/MeusProjetos";
 import { Modal } from "../components/ui/modal/Modal";
 import { FormNovoProjeto } from "../components/projects/FormNovoProjeto";
+import { ClientSelectionPlaceholder } from "../components/ui/placeholders/ClientSelectionPlaceholder";
+import { MetricCard } from "../components/financial/MetricCard"; // <--- Certifique-se de criar este arquivo ou copie o código acima para cá
 
+// Ícones e Tipos
+import { AlertCircle, Wallet, TrendingUp, Target } from "lucide-react";
 import type { Projeto, Simulacao } from "../types/database";
 import styles from "./Futuro.module.css";
-import { useActiveClient } from "../context/ActiveClientContext";
-import { AlertCircle, Users } from "lucide-react";
 
 export function Futuro() {
   const { activeClientId } = useActiveClient();
@@ -40,7 +44,7 @@ export function Futuro() {
   const [activeProjectIds, setActiveProjectIds] = useState<number[]>([]);
 
   // --- SLIDERS & DADOS VITAIS ---
-  const [expectativaVida, setExpectativaVida] = useState(100); // Valor padrão inicial
+  const [expectativaVida, setExpectativaVida] = useState(100);
   const [idadeAtual, setIdadeAtual] = useState(30);
   const [idadeCalculada, setIdadeCalculada] = useState(false);
 
@@ -50,7 +54,7 @@ export function Futuro() {
   const [outrasRendas, setOutrasRendas] = useState(0);
   const [investimentoMensal, setInvestimentoMensal] = useState(0);
 
-  // --- Projeção (Agora com dataWithProjects) ---
+  // --- Projeção ---
   const { ages, years, dataProjected, dataWithProjects } =
     useFinancialProjection({
       idadeAtual,
@@ -64,16 +68,19 @@ export function Futuro() {
       activeProjectIds,
     });
 
-  // --- 1. CARREGAMENTO GERAL ---
+  // --- CÁLCULO DE KPIs ---
+  // Encontrar o valor projetado na idade de aposentadoria
+  const indexAposentadoria = idadeAposentadoria - idadeAtual;
+  const patrimonioNaAposentadoria =
+    indexAposentadoria >= 0 && indexAposentadoria < dataWithProjects.length
+      ? dataWithProjects[indexAposentadoria]
+      : 0;
+
+  // --- CARREGAMENTO GERAL ---
   useEffect(() => {
     if (!activeClientId) return;
-
-    // A. Carrega Projetos
     fetchProjects(activeClientId);
-
-    // B. Carrega Dados do Cliente (Idade) e Simulação
     loadClientAndSimulation(activeClientId, simulacaoIdUrl);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClientId, simulacaoIdUrl, fetchProjects]);
 
@@ -82,7 +89,7 @@ export function Futuro() {
     simId: string | null
   ) => {
     try {
-      // 1. BUSCAR DATA DE NASCIMENTO (PERFIL)
+      // 1. BUSCAR DADOS DO PERFIL
       const { data: perfil } = await supabase
         .from("perfis")
         .select("data_nascimento, expectativa_vida")
@@ -93,33 +100,24 @@ export function Futuro() {
         const idadeReal = calculateAge(perfil.data_nascimento);
         setIdadeAtual(idadeReal);
         setIdadeCalculada(true);
-
-        if (idadeAposentadoria <= idadeReal) {
+        if (idadeAposentadoria <= idadeReal)
           setIdadeAposentadoria(idadeReal + 10);
-        }
       } else {
         setIdadeCalculada(false);
       }
 
-      if (perfil?.expectativa_vida) {
-        setExpectativaVida(perfil.expectativa_vida);
-      } else {
-        setExpectativaVida(100);
-      }
+      setExpectativaVida(perfil?.expectativa_vida || 100);
 
       // 2. BUSCAR SIMULAÇÃO
       let query = supabase
         .from("simulacoes")
         .select("*")
         .eq("perfil_id", clientId);
-
-      if (simId) {
-        query = query.eq("id", simId);
-      } else {
+      if (simId) query = query.eq("id", simId);
+      else
         query = query
           .eq("ativo", true)
           .order("created_at", { ascending: false });
-      }
 
       const { data: simData } = await query.maybeSingle();
 
@@ -148,8 +146,7 @@ export function Futuro() {
     }
   };
 
-  // --- AÇÕES ---
-
+  // --- ACTIONS ---
   const handleSaveSimulation = async () => {
     if (!activeClientId) return;
     setIsSavingSim(true);
@@ -193,77 +190,63 @@ export function Futuro() {
   };
 
   const handleToggleProject = async (projectId: number, isActive: boolean) => {
-    if (!currentSim) return toast.info("Crie um cenário primeiro.");
+    if (!currentSim) return toast.info("Salve o cenário primeiro.");
 
-    // Atualização Otimista
+    // Optimistic UI
     setActiveProjectIds((prev) =>
       isActive ? [...prev, projectId] : prev.filter((id) => id !== projectId)
     );
 
-    if (isActive)
+    if (isActive) {
       await supabase.from("simulacao_projetos").insert({
         simulacao_id: currentSim.id,
         projeto_id: projectId,
         ativo: true,
       });
-    else
+    } else {
       await supabase
         .from("simulacao_projetos")
         .delete()
         .eq("simulacao_id", currentSim.id)
         .eq("projeto_id", projectId);
+    }
   };
 
-  // --- NOVO: Lógica da Coluna Mestra ---
   const handleToggleColumn = async (priority: string, isActive: boolean) => {
-    if (!currentSim) return toast.info("Crie um cenário primeiro.");
+    if (!currentSim) return toast.info("Salve o cenário primeiro.");
 
-    // 1. Identificar projetos da coluna
     const projectsInColumn = projects.filter((p) => p.prioridade === priority);
     const idsInColumn = projectsInColumn.map((p) => p.id);
-
     if (idsInColumn.length === 0) return;
 
-    // 2. Atualizar UI
     setActiveProjectIds((prev) => {
-      if (isActive) {
-        return Array.from(new Set([...prev, ...idsInColumn]));
-      } else {
-        return prev.filter((id) => !idsInColumn.includes(id));
-      }
+      if (isActive) return Array.from(new Set([...prev, ...idsInColumn]));
+      return prev.filter((id) => !idsInColumn.includes(id));
     });
 
-    // 3. Atualizar Banco
     try {
       if (isActive) {
-        // Limpa antes para garantir não duplicar erro
         await supabase
           .from("simulacao_projetos")
           .delete()
           .eq("simulacao_id", currentSim.id)
           .in("projeto_id", idsInColumn);
-
-        const linksToCreate = idsInColumn.map((id) => ({
+        const links = idsInColumn.map((id) => ({
           simulacao_id: currentSim!.id,
           projeto_id: id,
           ativo: true,
         }));
-
-        const { error } = await supabase
-          .from("simulacao_projetos")
-          .insert(linksToCreate);
-        if (error) throw error;
+        await supabase.from("simulacao_projetos").insert(links);
       } else {
-        const { error } = await supabase
+        await supabase
           .from("simulacao_projetos")
           .delete()
           .eq("simulacao_id", currentSim.id)
           .in("projeto_id", idsInColumn);
-        if (error) throw error;
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao sincronizar seleção.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao sincronizar.");
     }
   };
 
@@ -273,110 +256,77 @@ export function Futuro() {
     setActiveProjectIds((prev) => prev.filter((pId) => pId !== id));
   };
 
-  const handleSuccessForm = () => {
-    if (activeClientId) fetchProjects(activeClientId);
-  };
+  const formatMoney = (val: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: 0,
+    }).format(val);
 
-  // --- RENDERIZAÇÃO ---
-  if (!activeClientId) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "80vh",
-          color: "var(--text-secondary)",
-          textAlign: "center",
-        }}
-      >
-        <div
-          style={{
-            background: "#e2e8f0",
-            padding: "20px",
-            borderRadius: "50%",
-            marginBottom: "20px",
-          }}
-        >
-          <Users size={48} color="#64748b" />
-        </div>
-        <h2 style={{ color: "var(--text-primary)" }}>
-          Nenhum cliente selecionado
-        </h2>
-        <p>Selecione um cliente na barra superior.</p>
-      </div>
-    );
-  }
+  if (!activeClientId) return <ClientSelectionPlaceholder />;
 
   return (
-    <div>
-      <div
-        style={{
-          marginBottom: "20px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-        }}
-      >
+    <div className={styles.container}>
+      {/* HEADER */}
+      <div className={styles.header}>
         <div>
-          <h2 style={{ margin: 0, fontSize: "1.5rem" }}>
-            Planejamento Financeiro
-          </h2>
-          <div
-            style={{
-              display: "flex",
-              gap: "15px",
-              alignItems: "center",
-              marginTop: "5px",
-            }}
-          >
-            <p style={{ margin: 0, color: "var(--text-secondary)" }}>
-              Cenário: <strong>{currentSim?.titulo || "Novo Cenário"}</strong>
-            </p>
-
-            {idadeCalculada ? (
-              <span
-                style={{
-                  fontSize: "0.85rem",
-                  background: "#dcfce7",
-                  color: "#166534",
-                  padding: "2px 8px",
-                  borderRadius: "12px",
-                }}
-              >
-                Idade Real: {idadeAtual} anos
-              </span>
-            ) : (
-              <span
-                style={{
-                  fontSize: "0.85rem",
-                  background: "#fee2e2",
-                  color: "#991b1b",
-                  padding: "2px 8px",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
-                <AlertCircle size={12} /> Idade Padrão (Complete o Perfil)
-              </span>
-            )}
+          <h2 className={styles.title}>Planejamento Futuro</h2>
+          <div className={styles.scenarioBadge}>
+            Cenário:{" "}
+            <span className={styles.scenarioName}>
+              {currentSim?.titulo || "Não salvo"}
+            </span>
           </div>
         </div>
+
+        {idadeCalculada ? (
+          <div className={`${styles.ageBadge} ${styles.ageReal}`}>
+            Idade Real: {idadeAtual} anos
+          </div>
+        ) : (
+          <div className={`${styles.ageBadge} ${styles.ageEstimated}`}>
+            <AlertCircle size={14} /> Idade Estimada
+          </div>
+        )}
       </div>
 
-      <div className={styles.dashboardLayout}>
-        <div>
+      {/* KPI CARDS (Resumo de Topo) */}
+      <div className={styles.kpiGrid}>
+        <MetricCard
+          title="Patrimônio Inicial"
+          value={formatMoney(patrimonioAtual)}
+          icon={Wallet}
+          colorTheme="blue"
+        />
+        <MetricCard
+          title="Aporte Mensal"
+          value={formatMoney(investimentoMensal)}
+          icon={TrendingUp}
+          colorTheme="green"
+        />
+        <MetricCard
+          title={`Projeção aos ${idadeAposentadoria} anos`}
+          value={formatMoney(patrimonioNaAposentadoria)}
+          subtitle="Considerando rentabilidade e projetos"
+          icon={Target}
+          colorTheme="purple"
+        />
+      </div>
+
+      {/* DASHBOARD GRID */}
+      <div className={styles.dashboardGrid}>
+        {/* Lado Esquerdo: Gráfico */}
+        <div className={styles.chartCard}>
           <FinancialChart
             ages={ages}
             years={years}
             dataProjected={dataProjected}
-            dataWithProjects={dataWithProjects} // <--- Passando a linha real
+            dataWithProjects={dataWithProjects}
           />
         </div>
-        <div>
+
+        {/* Lado Direito: Controles */}
+        <div className={styles.controlsCard}>
           <SimulacaoControls
             idade={idadeAposentadoria}
             setIdade={setIdadeAposentadoria}
@@ -392,7 +342,9 @@ export function Futuro() {
         </div>
       </div>
 
+      {/* SEÇÃO DE PROJETOS */}
       <div className={styles.projectsSection}>
+        <h3 className={styles.sectionTitle}>Projetos de Vida</h3>
         <MeusProjetos
           projects={projects}
           activeProjectIds={activeProjectIds}
@@ -406,15 +358,16 @@ export function Futuro() {
           }}
           onDeleteProject={handleDeleteProject}
           onToggleProject={handleToggleProject}
-          onToggleColumn={handleToggleColumn} // <--- Passando a função da coluna mestra
+          onToggleColumn={handleToggleColumn}
         />
       </div>
 
+      {/* MODAL */}
       <Modal isOpen={!!modalView} onClose={() => setModalView(null)}>
         {modalView === "add" && activeClientId && (
           <FormNovoProjeto
             onClose={() => setModalView(null)}
-            onSuccess={handleSuccessForm}
+            onSuccess={() => fetchProjects(activeClientId)}
             projectToEdit={projectToEdit}
             ownerId={activeClientId}
           />

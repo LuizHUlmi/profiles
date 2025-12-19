@@ -1,102 +1,95 @@
-/* src/components/projects/ProjectCard.module.css */
+/* src/components/projects/ProjetoCard.module.css */
 
-.projectCard {
-  background-color: var(
-    --bg-page
-  ); /* Fundo levemente cinza para destacar do branco da coluna */
-  border: 1px solid transparent; /* Sem borda por padrão */
-  border-radius: var(--radius-sm);
-  padding: 1rem;
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
   transition: all 0.2s ease;
-  cursor: pointer;
+  gap: 1.25rem;
   position: relative;
 }
 
-.projectCard:hover {
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border-color: var(--primary); /* Borda azul ao passar o mouse */
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  border-color: var(--primary-light, #bfdbfe);
 }
 
-/* Estado Inativo (transparente/apagado) */
-.inactiveCard {
-  opacity: 0.6;
-  filter: grayscale(100%);
-  background-color: #f1f5f9;
-}
-
-.cardHeader {
+/* --- LINHA SUPERIOR --- */
+.topRow {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 0.5rem;
+  width: 100%;
+  gap: 0.75rem;
 }
 
-.cardHeader h5 {
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  margin: 0;
-  font-weight: 600;
-  line-height: 1.4;
-  flex: 1;
-}
-
-.cardControls {
+.infoGroup {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
 }
 
-.cardValue {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0.25rem 0;
-}
-
-.cardDetail {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-/* Botões de Ação (Lápis/Lixo) */
-.iconButton {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-secondary);
-  padding: 4px;
-  border-radius: 4px;
+/* Ícone Padronizado (Sem variação de cor por prioridade) */
+.iconContainer {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  margin-top: -2px;
+
+  /* Padrão do Sistema: Azul Primário */
+  background-color: #f0f9ff;
+  color: #0ea5e9;
 }
 
-.iconButton:hover {
-  background-color: rgba(0, 123, 255, 0.1);
-  color: var(--primary);
+.textInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
 }
 
-.deleteButton:hover {
-  background-color: #fee2e2;
-  color: var(--danger);
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
 }
 
-/* Switch Pequeno para o Card */
-.switch {
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- SWITCH (Mantido igual) --- */
+.switchLabel {
   position: relative;
   display: inline-block;
-  width: 28px;
-  height: 16px;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
 }
-/* ... (pode reutilizar o estilo do switch da coluna se quiser, mas ajustando tamanhos) ... */
-.switch input {
+
+.switchInput {
   opacity: 0;
   width: 0;
   height: 0;
 }
+
 .slider {
   position: absolute;
   cursor: pointer;
@@ -104,24 +97,86 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: #cbd5e1;
   transition: 0.4s;
-  border-radius: 34px;
+  border-radius: 20px;
 }
+
 .slider:before {
   position: absolute;
   content: "";
-  height: 12px;
-  width: 12px;
+  height: 16px;
+  width: 16px;
   left: 2px;
   bottom: 2px;
   background-color: white;
   transition: 0.4s;
   border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
-input:checked + .slider {
-  background-color: var(--primary);
+
+.switchInput:checked + .slider {
+  background-color: var(--success); /* Verde quando ativo */
 }
-input:checked + .slider:before {
-  transform: translateX(12px);
+
+.switchInput:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+/* --- LINHA INFERIOR --- */
+.bottomRow {
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.valueGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.valueLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0.4rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtn:hover {
+  background-color: #f0f9ff;
+  color: var(--primary);
+}
+
+.deleteBtn:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
 }

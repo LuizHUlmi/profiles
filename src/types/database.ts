@@ -53,15 +53,19 @@ export interface Familiar {
 // Interface unificada e completa
 export interface Projeto {
   id: number;
-  perfil_id: string; // Padronizado como perfil_id (vinculo com o Cliente)
+  perfil_id: string; // ou uuid, dependendo de como você tipou antes
   nome: string;
-  prioridade: string; // 'essencial', 'desejo', 'sonho'
-  valor: number;
-  prazo: string;
-  tipo?: string;
-  idade_realizacao?: number | null; // Importante para o cálculo futuro
-}
+  prioridade: "vital" | "essencial" | "desejavel";
 
+  // As colunas padronizadas:
+  valor_total: number;
+  ano_realizacao: number;
+
+  // Campos opcionais/sistema
+  created_at?: string;
+  updated_at?: string;
+  finalizado?: boolean;
+}
 // --- 4. SIMULAÇÃO E CENÁRIOS ---
 export interface Simulacao {
   id: string;

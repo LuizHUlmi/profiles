@@ -2,7 +2,6 @@
 
 import ReactECharts from "echarts-for-react";
 
-// Definição de tipo auxiliar para o parâmetro do ECharts
 type EChartsParam = {
   axisValue: string;
   color: string;
@@ -14,8 +13,8 @@ type EChartsParam = {
 type FinancialChartProps = {
   ages: number[];
   years: (string | number)[];
-  dataProjected: number[]; // Cenário Base (Sem projetos)
-  dataWithProjects?: number[]; // Cenário Real (Com projetos) <--- NOVO
+  dataProjected: number[];
+  dataWithProjects?: number[];
 };
 
 export function FinancialChart({
@@ -25,63 +24,54 @@ export function FinancialChart({
   dataWithProjects,
 }: FinancialChartProps) {
   const colors = {
-    primary: "#007bff", // Azul (Base)
-    secondary: "#f97316", // Laranja (Real/Com Projetos)
-    text: "#333333",
-    textLight: "#666666",
-    grid: "#e0e0e0",
+    base: "#94a3b8",
+    real: "#0ea5e9",
+    text: "#334155",
+    textLight: "#94a3b8",
+    grid: "#f1f5f9",
   };
 
   const options = {
-    title: {
-      text: "Projeção de Patrimônio",
-      left: "0",
-      textStyle: {
-        color: colors.text,
-        fontSize: 16,
-        fontWeight: "600",
-        fontFamily: "Inter, sans-serif",
-      },
-    },
     tooltip: {
       trigger: "axis",
-      backgroundColor: "rgba(255, 255, 255, 0.95)",
-      borderColor: colors.grid,
+      backgroundColor: "rgba(255, 255, 255, 0.98)",
+      borderColor: "#e2e8f0",
       borderWidth: 1,
-      textStyle: { color: colors.text },
-      // Tipagem aplicada aqui
+      padding: 12,
+      textStyle: { color: colors.text, fontSize: 13 },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       formatter: function (params: EChartsParam[] | any) {
         if (!Array.isArray(params)) return "";
         const index = params[0].dataIndex;
-        let result = `<div style="margin-bottom: 8px; font-weight: 600; color: ${colors.textLight}">
-                        ${params[0].axisValue} <span style="font-weight:normal">(${ages[index]} anos)</span>
+
+        let result = `<div style="margin-bottom: 8px; font-weight: 600; color: ${colors.text}">
+                        ${params[0].axisValue} <span style="color:${colors.textLight}; font-weight:400">(${ages[index]} anos)</span>
                       </div>`;
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         params.forEach((item: any) => {
-          // Formata valor monetário
           const val = new Intl.NumberFormat("pt-BR", {
             style: "currency",
             currency: "BRL",
+            maximumFractionDigits: 0,
           }).format(item.value);
 
-          result += `<div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; font-size: 14px;">
+          result += `<div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 13px; margin-top: 4px;">
             <div style="display:flex; align-items:center; gap: 6px;">
-                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background-color:${item.color};"></span>
-                <span>${item.seriesName}</span>
+                <span style="width:8px; height:8px; border-radius:50%; background-color:${item.color};"></span>
+                <span style="color: ${colors.text}">${item.seriesName}</span>
             </div>
-            <span style="font-weight: 700;">${val}</span>
+            <span style="font-weight: 600;">${val}</span>
           </div>`;
         });
         return result;
       },
     },
     grid: {
-      left: "0",
-      right: "2%",
+      left: "2%",
+      right: "3%",
       bottom: "3%",
-      top: "15%",
+      top: "5%",
       containLabel: true,
     },
     xAxis: {
@@ -89,11 +79,8 @@ export function FinancialChart({
       boundaryGap: false,
       data: years,
       axisLabel: {
-        interval: 59,
-        formatter: (value: string, index: number) => {
-          const ano = value.split("/")[1];
-          return `${ano}\n${ages[index]} anos`;
-        },
+        interval: Math.floor(years.length / 6),
+        formatter: (value: string) => value.toString(),
         color: colors.textLight,
         fontSize: 11,
       },
@@ -113,36 +100,32 @@ export function FinancialChart({
       },
       splitLine: {
         lineStyle: {
-          type: "dashed",
           color: colors.grid,
         },
       },
     },
     series: [
-      // SÉRIE 1: BASE (Azul) - Tracejada se tiver projetos, Sólida se não tiver
       {
-        name: "Cenário Base (Sem Projetos)",
+        name: "Cenário Base",
         type: "line",
-        smooth: 0.3,
+        smooth: true,
         showSymbol: false,
         lineStyle: {
-          color: colors.primary,
+          color: colors.base,
           width: 2,
-          type: dataWithProjects ? "dashed" : "solid", // Fica tracejada para comparar
-          opacity: 0.6,
+          type: dataWithProjects ? "dashed" : "solid",
         },
         data: dataProjected,
       },
-      // SÉRIE 2: REAL (Laranja) - Só aparece se houver dados
       ...(dataWithProjects
         ? [
             {
-              name: "Cenário Real (Com Projetos)",
+              name: "Cenário Projetado",
               type: "line",
-              smooth: 0.3,
+              smooth: true,
               showSymbol: false,
               lineStyle: {
-                color: colors.secondary,
+                color: colors.real,
                 width: 3,
               },
               areaStyle: {
@@ -153,8 +136,8 @@ export function FinancialChart({
                   x2: 0,
                   y2: 1,
                   colorStops: [
-                    { offset: 0, color: "rgba(249, 115, 22, 0.2)" }, // Laranja claro
-                    { offset: 1, color: "rgba(249, 115, 22, 0)" },
+                    { offset: 0, color: "rgba(14, 165, 233, 0.2)" },
+                    { offset: 1, color: "rgba(14, 165, 233, 0)" },
                   ],
                 },
               },
@@ -166,11 +149,15 @@ export function FinancialChart({
   };
 
   return (
-    <ReactECharts
-      option={options}
-      style={{ height: "400px", width: "100%" }}
-      notMerge={true}
-      lazyUpdate={true}
-    />
+    // FIX DO ERRO DISCONNECT: Adicionar um container div explicito em volta
+    <div style={{ width: "100%", height: "100%", minHeight: "400px" }}>
+      <ReactECharts
+        option={options}
+        style={{ height: "100%", width: "100%" }}
+        notMerge={true}
+        lazyUpdate={true}
+        theme={"light"}
+      />
+    </div>
   );
 }

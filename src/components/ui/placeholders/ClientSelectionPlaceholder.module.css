@@ -1,0 +1,46 @@
+/* src/components/ui/placeholders/ClientSelectionPlaceholder.module.css */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px; /* Garante uma altura mínima visual */
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  background-color: #f8fafc; /* Um cinza bem clarinho de fundo */
+  border: 2px dashed #e2e8f0; /* Borda tracejada suave */
+  border-radius: 12px;
+  margin: 1rem 0;
+  color: #64748b; /* Slate-500 */
+}
+
+.iconWrapper {
+  background-color: #e2e8f0;
+  padding: 1.5rem;
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyIcon {
+  color: #475569; /* Slate-600 */
+}
+
+.emptyTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b; /* Slate-800 */
+  margin: 0 0 0.5rem 0;
+}
+
+.emptyText {
+  font-size: 0.95rem;
+  color: #64748b;
+  max-width: 400px;
+  line-height: 1.5;
+  margin: 0;
+}

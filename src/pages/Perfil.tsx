@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { useActiveClient } from "../context/ActiveClientContext";
 import styles from "./perfil.module.css";
 import { useToast } from "../components/ui/toast/ToastContext";
+import { ClientSelectionPlaceholder } from "../components/ui/placeholders/ClientSelectionPlaceholder";
 
 // Componentes da Página
 import { DadosPessoaisCard } from "../components/clients/DadosPessoaisCard";
@@ -23,15 +24,20 @@ export function Perfil() {
   const [profileData, setProfileData] = useState<any>(null);
   const [isClient, setIsClient] = useState(false);
 
-  // Define quem é o alvo: o cliente selecionado pelo Consultor OU o próprio usuário logado
+  // Verifica se é Staff sem cliente selecionado
+  const isStaffWithoutClient = profile?.userType === "staff" && !activeClientId;
   const targetId = activeClientId || profile?.id;
 
   useEffect(() => {
+    if (isStaffWithoutClient) {
+      setLoadingData(false);
+      return;
+    }
+
     async function loadData() {
       if (!targetId) return;
       setLoadingData(true);
       try {
-        // 1. Tenta buscar na tabela de Perfis (Clientes)
         const { data: cliente } = await supabase
           .from("perfis")
           .select("*")
@@ -42,7 +48,6 @@ export function Perfil() {
           setProfileData(cliente);
           setIsClient(true);
         } else {
-          // 2. Se não achar, tenta buscar na tabela de Consultores (Equipe)
           const { data: consultor } = await supabase
             .from("consultores")
             .select("*")
@@ -62,7 +67,17 @@ export function Perfil() {
       }
     }
     loadData();
-  }, [targetId, toast]);
+  }, [targetId, toast, isStaffWithoutClient]);
+
+  // MUDANÇA: Texto específico para Perfil
+  if (isStaffWithoutClient) {
+    return (
+      <ClientSelectionPlaceholder
+        title="Perfil do Cliente"
+        message="Selecione um cliente na barra superior para visualizar e editar seus dados cadastrais."
+      />
+    );
+  }
 
   if (loadingData)
     return (
@@ -103,9 +118,8 @@ export function Perfil() {
         </div>
       )}
 
-      {/* 3. PREMISSAS ECONÔMICAS (Correção Aplicada Aqui) */}
+      {/* 3. PREMISSAS ECONÔMICAS */}
       <div className={styles.fullWidthSection}>
-        {/* Passamos o targetId para que o formulário saiba a quem salvar */}
         <GlobalParametersForm profileId={targetId} />
       </div>
 

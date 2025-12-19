@@ -1,86 +1,95 @@
-// src/components/meusProjetos/ProjectCard.tsx
+// src/components/projects/ProjetoCard.tsx
 
-import { Trash2, Pencil } from "lucide-react";
+import { Pencil, Trash2, Target, Calendar } from "lucide-react";
+import type { Projeto } from "../../types/database";
 import styles from "./ProjectCard.module.css";
 
-type ProjectCardProps = {
-  title: string;
-  value: number;
-  details?: string;
-
-  // MUDANÇA: Recebe o estado de fora
-  isChecked: boolean;
-  onToggle: (checked: boolean) => void;
-
+interface ProjetoCardProps {
+  projeto: Projeto;
+  isActive: boolean;
+  onToggle: (isActive: boolean) => void;
   onEdit: () => void;
   onDelete: () => void;
-};
+}
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
-
-export function ProjectCard({
-  title,
-  value,
-  details,
-  isChecked, // Agora vem via prop
-  onToggle, // Agora vem via prop
+export function ProjetoCard({
+  projeto,
+  isActive,
+  onToggle,
   onEdit,
   onDelete,
-}: ProjectCardProps) {
+}: ProjetoCardProps) {
+  const formatMoney = (val: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: 0,
+    }).format(val);
+
   return (
-    <div
-      className={`${styles.projectCard} ${
-        isChecked ? "" : styles.inactiveCard
-      }`}
-    >
-      <div className={styles.cardHeader}>
-        <h5>{title}</h5>
+    <div className={styles.card}>
+      {/* LINHA SUPERIOR */}
+      <div className={styles.topRow}>
+        <div className={styles.infoGroup}>
+          {/* Ícone Padrão do Sistema */}
+          <div className={styles.iconContainer}>
+            <Target size={20} />
+          </div>
 
-        <div className={styles.cardControls}>
-          {/* Toggle Controlado */}
-          <label className={styles.switch}>
-            <input
-              type="checkbox"
-              checked={isChecked}
-              onChange={(e) => onToggle(e.target.checked)}
-            />
-            <span className={styles.slider}></span>
-          </label>
+          <div className={styles.textInfo}>
+            <h4 className={styles.title}>{projeto.nome}</h4>
+            <div className={styles.subtitle}>
+              <Calendar size={12} />
+              <span>{projeto.ano_realizacao}</span>
+              <span style={{ margin: "0 4px" }}>•</span>
+              <span style={{ textTransform: "capitalize" }}>
+                {projeto.prioridade}
+              </span>
+            </div>
+          </div>
+        </div>
 
-          <button
-            className={styles.iconButton}
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            title="Editar"
-          >
+        {/* SWITCH */}
+        <label
+          className={styles.switchLabel}
+          title={isActive ? "Remover da Simulação" : "Incluir na Simulação"}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            type="checkbox"
+            className={styles.switchInput}
+            checked={isActive}
+            onChange={(e) => onToggle(e.target.checked)}
+          />
+          <span className={styles.slider}></span>
+        </label>
+      </div>
+
+      {/* LINHA INFERIOR */}
+      <div className={styles.bottomRow}>
+        <div className={styles.valueGroup}>
+          <span className={styles.valueLabel}>Custo Total</span>
+          <span className={styles.value}>
+            {formatMoney(projeto.valor_total)}
+          </span>
+        </div>
+
+        <div className={styles.actions}>
+          <button onClick={onEdit} className={styles.actionBtn} title="Editar">
             <Pencil size={16} />
           </button>
-
           <button
-            className={`${styles.iconButton} ${styles.deleteButton}`}
             onClick={(e) => {
               e.stopPropagation();
-              onDelete();
+              if (confirm("Excluir projeto?")) onDelete();
             }}
+            className={`${styles.actionBtn} ${styles.deleteBtn}`}
             title="Excluir"
           >
             <Trash2 size={16} />
           </button>
         </div>
       </div>
-
-      <p className={styles.cardValue}>{currencyFormatter.format(value)}</p>
-
-      {details && (
-        <div className={styles.cardDetail}>
-          <span>{details}</span>
-        </div>
-      )}
     </div>
   );
 }
