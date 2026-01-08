@@ -1,43 +1,74 @@
-import { createContext, useContext, useState, useEffect } from "react";
+// src/context/ActiveClientContext.tsx
+
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
 import { useAuth } from "./AuthContext";
 
-type ActiveClientContextType = {
+type ActiveClientContextData = {
   activeClientId: string | null;
   setActiveClientId: (id: string | null) => void;
+  isStaffViewingClient: boolean;
 };
 
-const ActiveClientContext = createContext<ActiveClientContextType>({
-  activeClientId: null,
-  setActiveClientId: () => {},
-});
+const ActiveClientContext = createContext<ActiveClientContextData>(
+  {} as ActiveClientContextData
+);
 
-export function ActiveClientProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { profile, loading } = useAuth();
-  const [activeClientId, setActiveClientId] = useState<string | null>(null);
+export function ActiveClientProvider({ children }: { children: ReactNode }) {
+  const { profile } = useAuth();
 
+  // ALTERAÇÃO PRINCIPAL:
+  // Inicializamos o estado JÁ lendo do localStorage.
+  // Isso garante que o ID esteja disponível no primeiro milissegundo,
+  // antes mesmo do useEffect rodar ou da Navbar renderizar os options.
+  const [activeClientId, setActiveClientIdState] = useState<string | null>(
+    () => {
+      const saved = localStorage.getItem("@avere:activeClient");
+      return saved || null;
+    }
+  );
+
+  // useEffect agora serve apenas para REGRAS DE NEGÓCIO (segurança/tipo)
   useEffect(() => {
-    if (!loading && profile) {
-      if (profile.userType === "client") {
-        // Se for cliente, trava no ID dele
-        setActiveClientId(profile.id);
-      } else {
-        // Se for staff (master/consultor), começa NULO para obrigar a seleção
-        // A menos que você queira persistir a seleção no localStorage, aqui é o lugar de limpar
-        setActiveClientId(null);
+    // 1. Se for Cliente Final, forçamos o ID ser ele mesmo (sobrescreve o storage se estiver errado)
+    if (profile?.userType === "client") {
+      if (activeClientId !== profile.id) {
+        setActiveClientIdState(profile.id);
       }
     }
-  }, [profile, loading]);
+    // 2. Se for Staff, não precisamos fazer nada aqui, pois o useState já carregou do Storage.
+    // Opcional: Se quiser limpar o storage quando fizer logout (profile null), pode tratar aqui.
+  }, [profile, activeClientId]);
+
+  // Mantemos a função wrapper igual
+  const setActiveClientId = (id: string | null) => {
+    setActiveClientIdState(id);
+    if (id) {
+      localStorage.setItem("@avere:activeClient", id);
+    } else {
+      localStorage.removeItem("@avere:activeClient");
+    }
+  };
+
+  const isStaffViewingClient = !!(
+    profile?.userType === "staff" && activeClientId
+  );
 
   return (
-    <ActiveClientContext.Provider value={{ activeClientId, setActiveClientId }}>
+    <ActiveClientContext.Provider
+      value={{ activeClientId, setActiveClientId, isStaffViewingClient }}
+    >
       {children}
     </ActiveClientContext.Provider>
   );
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useActiveClient = () => useContext(ActiveClientContext);
+export function useActiveClient() {
+  return useContext(ActiveClientContext);
+}
