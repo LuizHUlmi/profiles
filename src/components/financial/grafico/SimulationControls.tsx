@@ -92,7 +92,7 @@ export function SimulacaoControls({
         100
       )}
       {renderControl(
-        "Outras Rendas (INSS)",
+        "Outras Rendas",
         outrasRendas,
         setOutrasRendas,
         0,
