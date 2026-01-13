@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useClients } from "../hooks/useClients"; // <--- Hook Novo
+import { useClients } from "../hooks/useClients";
 
 // Componentes UI
 import { FormNovoCliente } from "../components/clients/FormNovoCliente";
