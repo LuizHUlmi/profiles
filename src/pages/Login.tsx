@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
+
 import { Button } from "../components/ui/button/Button";
 import styles from "./Login.module.css";
 import { useToast } from "../components/ui/toast/ToastContext";
@@ -163,7 +164,6 @@ export function Login() {
         {/* Cabeçalho com Logo */}
         <div className={styles.header}>
           <img src={logoFull} alt="Profiles Logo" className={styles.logo} />
-          <p className={styles.title}>Profile</p>
           <p className={styles.subtitle}>Planejamento Financeiro Inteligente</p>
         </div>
 

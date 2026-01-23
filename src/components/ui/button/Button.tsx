@@ -33,7 +33,6 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  // Combina as classes CSS com base nas props
   const classes = [
     styles.button,
     styles[variant],
@@ -43,18 +42,10 @@ export function Button({
   ].join(" ");
 
   return (
-    <button
-      className={classes}
-      disabled={disabled || loading} // Desabilita se estiver carregando
-      {...props}
-    >
+    <button className={classes} disabled={disabled || loading} {...props}>
       {loading ? (
-        <>
-          <Spinner size="small" />
-          {/* Opcional: Manter o texto visível ou mudar para 'Carregando...'? 
-              Aqui optei por mostrar Spinner + Texto original para manter contexto */}
-          <span>{children}</span>
-        </>
+        /* Agora renderiza APENAS o spinner, garantindo centralização total */
+        <Spinner size="small" />
       ) : (
         <>
           {icon && <span className={styles.icon}>{icon}</span>}
