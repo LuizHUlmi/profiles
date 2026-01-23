@@ -1,36 +1,36 @@
+/* src/components/clients/DadosPessoaisCard.module.css */
+
 .container {
-  font-family: inherit;
   margin-bottom: 2rem;
 }
 
 .title {
-  color: #2563eb; /* Azul padrão */
-  font-size: 1.25rem;
+  color: var(--text-primary);
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
 
   /* GRID SYSTEM */
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 2 Colunas iguais */
-  gap: 1.5rem; /* Espaço entre campos */
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
 }
 
-/* Campos que devem ocupar a linha inteira (Nome, Botão) */
 .fullWidth {
-  grid-column: 1 / -1; /* Ocupa do começo ao fim */
+  grid-column: 1 / -1;
 }
 
-/* Responsividade: No celular vira uma coluna só */
 @media (max-width: 640px) {
   .card {
     grid-template-columns: 1fr;
+    padding: 1.5rem;
   }
 }

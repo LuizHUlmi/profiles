@@ -10,9 +10,10 @@ import { ClientSelectionPlaceholder } from "../components/ui/placeholders/Client
 
 // Componentes da Página
 import { DadosPessoaisCard } from "../components/clients/DadosPessoaisCard";
-import { EnderecoPessoal } from "../components/clients/EnderecoPessoal";
 import { FamiliaSection } from "../components/clients/FamiliaSection";
 import { GlobalParametersForm } from "../components/clients/GlobalParametersForm";
+import { PageHeader } from "../components/ui/pageHeader/PageHeader";
+import { UserCircle } from "lucide-react";
 
 export function Perfil() {
   const { profile } = useAuth();
@@ -95,6 +96,11 @@ export function Perfil() {
 
   return (
     <div className={styles.container}>
+      <PageHeader
+        title={"Meu Perfil"}
+        subtitle="Gerencie informações pessoais e premissas financeiras."
+        icon={<UserCircle size={32} />}
+      />
       {/* 1. DADOS PESSOAIS */}
       <div className={styles.rowContainer}>
         <div className={styles.cardWrapper}>
@@ -122,17 +128,6 @@ export function Perfil() {
       <div className={styles.fullWidthSection}>
         <GlobalParametersForm profileId={targetId} />
       </div>
-
-      {/* 4. ENDEREÇO (Apenas Clientes) */}
-      {isClient && (
-        <div className={styles.fullWidthSection}>
-          <EnderecoPessoal
-            title="Endereço"
-            targetId={targetId}
-            initialData={profileData}
-          />
-        </div>
-      )}
     </div>
   );
 }

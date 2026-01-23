@@ -4,27 +4,26 @@ import { useEffect, useState } from "react";
 import { useFamily } from "../../hooks/useFamily";
 import { Button } from "../ui/button/Button";
 import { Modal } from "../ui/modal/Modal";
-import { FamilyForm } from "./FamilyForm"; // Importando o formulário que criamos/atualizamos
+import { FamilyForm } from "./FamilyForm";
 import { UserPlus, Trash2 } from "lucide-react";
 import { calculateAge } from "../../utils/date";
-import { maskCPF } from "../../utils/masks"; // Para formatar o CPF visualmente
 
 interface FamiliaSectionProps {
   profileId: string;
 }
 
 export function FamiliaSection({ profileId }: FamiliaSectionProps) {
-  // Hook que gerencia a lógica (buscar, adicionar, deletar)
   const { familiares, loading, fetchFamily, addFamiliar, deleteFamiliar } =
     useFamily(profileId);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchFamily();
-  }, [fetchFamily]);
+    if (profileId) {
+      fetchFamily();
+    }
+  }, [profileId, fetchFamily]);
 
-  // Função auxiliar para formatar a data (AAAA-MM-DD -> DD/MM/AAAA)
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "-";
     const [year, month, day] = dateStr.split("-");
@@ -33,24 +32,24 @@ export function FamiliaSection({ profileId }: FamiliaSectionProps) {
 
   return (
     <div style={{ marginBottom: "2rem" }}>
-      {/* Cabeçalho da Seção */}
+      {/* Cabeçalho da Seção Padronizado */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "1rem",
+          marginBottom: "1.5rem", // Padronizado com os outros cards
         }}
       >
         <h2
           style={{
-            fontSize: "1.5rem",
+            fontSize: "1.5rem", // Mesmo tamanho de Dados Pessoais
             fontWeight: "700",
             color: "var(--text-primary)",
             margin: 0,
           }}
         >
-          Família
+          Composição Familiar
         </h2>
         <Button
           onClick={() => setIsModalOpen(true)}
@@ -61,12 +60,13 @@ export function FamiliaSection({ profileId }: FamiliaSectionProps) {
         </Button>
       </div>
 
-      {/* Tabela */}
+      {/* Tabela dentro de um Card Padronizado */}
       <div
         style={{
           backgroundColor: "var(--bg-card)",
           borderRadius: "var(--radius-md)",
           border: "1px solid var(--border-color)",
+          boxShadow: "var(--shadow-sm)",
           overflow: "hidden",
         }}
       >
@@ -79,39 +79,48 @@ export function FamiliaSection({ profileId }: FamiliaSectionProps) {
         >
           <thead
             style={{
-              backgroundColor: "var(--bg-page)",
+              backgroundColor: "var(--bg-page)", // Fundo leve para o topo da tabela
               borderBottom: "1px solid var(--border-color)",
             }}
           >
             <tr>
               <th
                 style={{
-                  padding: "1rem",
-                  fontSize: "0.9rem",
+                  padding: "1rem 1.5rem",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
                   color: "var(--text-secondary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
                 }}
               >
                 Nome
               </th>
               <th
                 style={{
-                  padding: "1rem",
-                  fontSize: "0.9rem",
+                  padding: "1rem 1.5rem",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
                   color: "var(--text-secondary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
                 }}
               >
                 Parentesco
               </th>
               <th
                 style={{
-                  padding: "1rem",
-                  fontSize: "0.9rem",
+                  padding: "1rem 1.5rem",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
                   color: "var(--text-secondary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
                 }}
               >
-                Nascimento
+                Nascimento / Idade
               </th>
-              <th style={{ padding: "1rem" }}></th> {/* Coluna de Ações */}
+              <th style={{ padding: "1rem 1.5rem", width: "50px" }}></th>
             </tr>
           </thead>
           <tbody>
@@ -120,9 +129,9 @@ export function FamiliaSection({ profileId }: FamiliaSectionProps) {
                 <td
                   colSpan={4}
                   style={{
-                    padding: "1.5rem",
+                    padding: "2rem",
                     textAlign: "center",
-                    color: "#888",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   Carregando família...
@@ -133,9 +142,9 @@ export function FamiliaSection({ profileId }: FamiliaSectionProps) {
                 <td
                   colSpan={4}
                   style={{
-                    padding: "1.5rem",
+                    padding: "2rem",
                     textAlign: "center",
-                    color: "#888",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   Nenhum familiar cadastrado.
@@ -147,79 +156,81 @@ export function FamiliaSection({ profileId }: FamiliaSectionProps) {
                   key={f.id}
                   style={{ borderBottom: "1px solid var(--border-color)" }}
                 >
-                  {/* Coluna 1: Nome (+ CPF se tiver) */}
-                  <td style={{ padding: "1rem" }}>
+                  <td style={{ padding: "1rem 1.5rem" }}>
                     <div
-                      style={{ fontWeight: 500, color: "var(--text-primary)" }}
+                      style={{ fontWeight: 600, color: "var(--text-primary)" }}
                     >
                       {f.nome}
                     </div>
-                    {f.cpf && (
-                      <div
-                        style={{
-                          fontSize: "0.75rem",
-                          color: "var(--text-secondary)",
-                          marginTop: "2px",
-                        }}
-                      >
-                        CPF: {maskCPF(f.cpf)}
-                      </div>
-                    )}
                   </td>
 
-                  {/* Coluna 2: Parentesco */}
-                  <td style={{ padding: "1rem" }}>
+                  <td style={{ padding: "1rem 1.5rem" }}>
                     <span
                       style={{
-                        padding: "4px 8px",
-                        borderRadius: "4px",
+                        padding: "4px 10px",
+                        borderRadius: "20px",
                         backgroundColor:
-                          f.parentesco === "Cônjuge" ? "#e0f2fe" : "#f3f4f6", // Destaque azul se for Cônjuge
+                          f.parentesco === "Cônjuge"
+                            ? "var(--primary-light)"
+                            : "#f3f4f6",
                         color:
-                          f.parentesco === "Cônjuge" ? "#0284c7" : "#374151",
-                        fontSize: "0.85rem",
-                        fontWeight: 500,
+                          f.parentesco === "Cônjuge"
+                            ? "var(--primary)"
+                            : "var(--text-secondary)",
+                        fontSize: "0.8rem",
+                        fontWeight: 600,
                       }}
                     >
                       {f.parentesco}
                     </span>
                   </td>
 
-                  {/* Coluna 3: Nascimento + Idade */}
-                  <td style={{ padding: "1rem", color: "var(--text-primary)" }}>
-                    {formatDate(f.data_nascimento)}
+                  <td
+                    style={{
+                      padding: "1rem 1.5rem",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    <div style={{ fontSize: "0.95rem" }}>
+                      {formatDate(f.data_nascimento)}
+                    </div>
                     {f.data_nascimento && (
-                      <span
+                      <div
                         style={{
                           color: "var(--text-secondary)",
-                          marginLeft: "6px",
-                          fontSize: "0.9rem",
+                          fontSize: "0.85rem",
+                          marginTop: "2px",
                         }}
                       >
-                        ({calculateAge(f.data_nascimento)} anos)
-                      </span>
+                        {calculateAge(f.data_nascimento)} anos
+                      </div>
                     )}
                   </td>
 
-                  {/* Coluna 4: Ações */}
-                  <td style={{ padding: "1rem", textAlign: "right" }}>
+                  <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
                     <button
-                      onClick={() => deleteFamiliar(f.id)}
+                      onClick={() => {
+                        if (window.confirm(`Remover ${f.nome} da família?`)) {
+                          deleteFamiliar(f.id);
+                        }
+                      }}
                       style={{
                         background: "none",
                         border: "none",
                         cursor: "pointer",
                         color: "var(--text-secondary)",
-                        padding: "6px",
-                        borderRadius: "4px",
-                        transition: "color 0.2s",
+                        padding: "8px",
+                        borderRadius: "var(--radius-sm)",
+                        transition: "all 0.2s",
                       }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.color = "var(--danger)")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.color = "var(--text-secondary)")
-                      }
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = "var(--danger)";
+                        e.currentTarget.style.backgroundColor = "#fee2e2";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = "var(--text-secondary)";
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }}
                       title="Remover familiar"
                     >
                       <Trash2 size={18} />
@@ -232,7 +243,6 @@ export function FamiliaSection({ profileId }: FamiliaSectionProps) {
         </table>
       </div>
 
-      {/* Modal para adicionar novo familiar */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <FamilyForm
           onClose={() => setIsModalOpen(false)}

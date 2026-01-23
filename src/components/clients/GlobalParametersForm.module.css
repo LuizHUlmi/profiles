@@ -1,105 +1,63 @@
 /* src/components/clients/GlobalParametersForm.module.css */
 
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1rem;
+  margin-bottom: 2rem;
 }
 
 .header {
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 0.5rem 0;
-}
-
-.description {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0;
-  line-height: 1.5;
 }
 
-/* --- ESTILO DO DISCLAIMER (O Laranja que você gostou) --- */
 .warningBox {
   display: flex;
-  align-items: flex-start; /* Alinha ícone com a primeira linha de texto */
+  align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem;
   margin-top: 1rem;
-  background-color: #fff7ed; /* Laranja bem clarinho */
-  border: 1px solid #fdba74; /* Laranja médio */
-  border-radius: 8px;
-  color: #9a3412; /* Texto Laranja escuro */
+  background-color: #fff7ed; /* Mantido o tom de alerta */
+  border: 1px solid #fdba74;
+  border-radius: var(--radius-sm);
+  color: #9a3412;
   font-size: 0.9rem;
   line-height: 1.4;
-  animation: fadeIn 0.3s ease-in-out;
 }
-
-.warningBox strong {
-  font-weight: 600;
-  display: block; /* Quebra linha para o título do alerta, se quiser */
-  margin-bottom: 0.15rem;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-/* -------------------------------------------------------- */
 
 .card {
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 1.5rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.fullWidth {
-  width: 100%;
+  box-shadow: var(--shadow-sm);
 }
 
 .actions {
   display: flex;
-  justify-content: flex-end; /* Botões à direita */
+  justify-content: flex-end;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #f3f4f6;
-  margin-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .resetButton {
   background: none;
   border: none;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   cursor: pointer;
   text-decoration: underline;
-  transition: color 0.2s;
 }
 
-.resetButton:hover {
-  color: #ef4444; /* Vermelho ao passar o mouse */
-}
-
-.resetButton:disabled {
-  color: #d1d5db;
-  cursor: not-allowed;
-  text-decoration: none;
+.resetButton:hover:not(:disabled) {
+  color: var(--danger);
 }

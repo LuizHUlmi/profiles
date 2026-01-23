@@ -9,20 +9,13 @@ import { useFamily } from "../../hooks/useFamily";
 import { Button } from "../ui/button/Button";
 import { Modal } from "../ui/modal/Modal";
 import { AssetsLiabilitiesForm } from "../financial/AssetsLiabilitiesForm";
-import {
-  TrendingUp,
-  Landmark,
-  CreditCard,
-  Plus,
-  Home, // Adicionei o Home para manter consistência com o exemplo anterior se preferir
-} from "lucide-react";
+import { TrendingUp, Landmark, CreditCard, Plus, Home } from "lucide-react";
 import type { ItemAtivoPassivo } from "../../types/database";
 
 type GestaoPatrimonioProps = {
   perfilId: string;
 };
 
-// --- DEFINIÇÃO DOS TIPOS (Mantido do seu original) ---
 const TYPES_INVESTIMENTOS = [
   "Renda Fixa",
   "Renda Variável",
@@ -42,18 +35,17 @@ const TYPES_PASSIVOS = [
 ];
 
 export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
-  // --- HOOKS E ESTADOS (Mantido do seu original) ---
   const { items, fetchItems, deleteItem, addItem, updateItem } =
     useAssetsLiabilities(perfilId);
   const { familiares, fetchFamily } = useFamily(perfilId);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalCategory, setModalCategory] = useState<"ativo" | "passivo">(
-    "ativo"
+    "ativo",
   );
   const [itemToEdit, setItemToEdit] = useState<ItemAtivoPassivo | null>(null);
   const [modalDefaultType, setModalDefaultType] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [modalAllowedTypes, setModalAllowedTypes] = useState<
     string[] | undefined
@@ -66,11 +58,10 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
     }
   }, [perfilId, fetchItems, fetchFamily]);
 
-  // --- HANDLERS (Mantido do seu original) ---
   const handleOpenNew = (
     categoria: "ativo" | "passivo",
     defaultType?: string,
-    allowedTypes?: string[]
+    allowedTypes?: string[],
   ) => {
     setItemToEdit(null);
     setModalCategory(categoria);
@@ -94,7 +85,7 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
   };
 
   const handleFormSubmit = async (
-    data: Omit<ItemAtivoPassivo, "id" | "perfil_id">
+    data: Omit<ItemAtivoPassivo, "id" | "perfil_id">,
   ) => {
     if (itemToEdit) {
       return await updateItem(itemToEdit.id, data);
@@ -109,7 +100,6 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
       currency: "BRL",
     }).format(val);
 
-  // --- FILTROS E CÁLCULOS (Mantido do seu original) ---
   const filterItemsByColumn = (colId: string) => {
     return items.filter((item) => {
       if (colId === "passivo" && item.categoria !== "passivo") return false;
@@ -136,7 +126,6 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
   const chartTotals = useMemo(() => {
     const calcTotal = (colId: string) =>
       filterItemsByColumn(colId).reduce((acc, curr) => acc + curr.valor, 0);
-
     return {
       investimento: calcTotal("investimento"),
       previdencia: calcTotal("previdencia"),
@@ -146,13 +135,11 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
-  // --- CONFIGURAÇÃO DAS COLUNAS (ATUALIZADO COM CORES NOVAS) ---
   const columns = [
     {
       id: "investimento",
       title: "Investimentos",
       icon: <TrendingUp size={20} />,
-      // Slate 800: Escuro, sólido, transmite segurança máxima
       color: "#1e293b",
       btnCategory: "ativo" as const,
       defaultType: "Renda Fixa",
@@ -162,7 +149,6 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
       id: "previdencia",
       title: "Previdência",
       icon: <Landmark size={20} />,
-      // Slate 600: Um tom médio, mantendo a família do cinza-azulado
       color: "#475569",
       btnCategory: "ativo" as const,
       defaultType: "Previdência",
@@ -172,7 +158,6 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
       id: "imobilizado",
       title: "Imobilizado",
       icon: <Home size={20} />,
-      // Slate 400: Mais leve, diferencia visualmente sem sair do tom
       color: "#94a3b8",
       btnCategory: "ativo" as const,
       defaultType: "Imóvel",
@@ -182,8 +167,7 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
       id: "passivo",
       title: "Passivos / Dívidas",
       icon: <CreditCard size={20} />,
-      // Rose 700: Um tom "Vinho/Rosé". É negativo, mas elegante e suave.
-      color: "#be123c",
+      color: "var(--danger)",
       btnCategory: "passivo" as const,
       defaultType: "Financiamento Imobiliário",
       allowedTypes: TYPES_PASSIVOS,
@@ -192,12 +176,8 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
 
   return (
     <div className={styles.container}>
-      {/* 1. GRÁFICO (Recebe os totais calculados do banco) */}
       <PatrimonioChart totals={chartTotals} />
 
-      <div className={styles.header}></div>
-
-      {/* 2. GRID INTELIGENTE (Usa a classe .grid do CSS atualizado) */}
       <div className={styles.grid}>
         {columns.map((col) => {
           const colItems = filterItemsByColumn(col.id);
@@ -205,23 +185,16 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
 
           return (
             <div key={col.id} className={styles.column}>
-              {/* Cabeçalho da Coluna com Cores Novas */}
               <div className={styles.columnHeader}>
                 <div className={styles.columnTitleRow}>
                   <div
-                    className={styles.columnTitle} // Adicionei a classe para facilitar
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      color: col.color, // Aplica a cor corporativa definida acima
-                    }}
+                    className={styles.columnTitle}
+                    style={{ color: col.color }}
                   >
                     {col.icon}
-                    <span style={{ fontWeight: 600 }}>{col.title}</span>
+                    <span>{col.title}</span>
                   </div>
 
-                  {/* Botão de Adicionar (+) */}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -229,32 +202,24 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
                       handleOpenNew(
                         col.btnCategory,
                         col.defaultType,
-                        col.allowedTypes
+                        col.allowedTypes,
                       )
                     }
-                    style={{
-                      padding: "4px",
-                      height: "auto",
-                      // Deixei o ícone sutil, usando a mesma cor da coluna mas com transparência se quisesse
-                      color: col.color,
-                      opacity: 0.6,
-                    }}
+                    className={styles.addBtn}
+                    style={{ color: col.color }}
                     title={`Adicionar ${col.title}`}
                   >
                     <Plus size={18} />
                   </Button>
                 </div>
-
-                {/* Valor Total da Coluna */}
                 <div className={styles.totalValue} style={{ color: col.color }}>
                   {formatMoney(total)}
                 </div>
               </div>
 
-              {/* Lista de Cards */}
               <div className={styles.cardList}>
                 {colItems.length === 0 ? (
-                  <div className={styles.emptyState}>Nenhum item</div>
+                  <div className={styles.emptyState}>Nenhum item lançado</div>
                 ) : (
                   colItems.map((item) => (
                     <PatrimonioCard
@@ -271,7 +236,6 @@ export function GestaoPatrimonio({ perfilId }: GestaoPatrimonioProps) {
         })}
       </div>
 
-      {/* 3. MODAL DE CADASTRO/EDIÇÃO (Mantido do seu original) */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         {isModalOpen && (
           <AssetsLiabilitiesForm

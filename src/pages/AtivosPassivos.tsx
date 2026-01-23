@@ -4,11 +4,12 @@ import { useActiveClient } from "../context/ActiveClientContext";
 import { GestaoPatrimonio } from "../components/patrimonio/GestaoPatrimonio";
 import styles from "./AtivosPassivos.module.css";
 import { ClientSelectionPlaceholder } from "../components/ui/placeholders/ClientSelectionPlaceholder";
+import { PageHeader } from "../components/ui/pageHeader/PageHeader";
+import { Scale } from "lucide-react";
 
 export function AtivosPassivos() {
   const { activeClientId } = useActiveClient();
 
-  // MUDANÇA: Substituímos o HTML manual pelo componente padrão
   if (!activeClientId) {
     return (
       <ClientSelectionPlaceholder
@@ -20,13 +21,11 @@ export function AtivosPassivos() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <h2 className={styles.title}>Estrutura Patrimonial</h2>
-        <p className={styles.subtitle}>
-          Gerencie Investimentos, Previdência, Imóveis e Dívidas.
-        </p>
-      </header>
-
+      <PageHeader
+        title="Estrutura Patrimonial"
+        subtitle="Gerencie Investimentos, Previdência, Imóveis e Dívidas."
+        icon={<Scale size={32} />}
+      />
       <GestaoPatrimonio perfilId={activeClientId} />
     </div>
   );

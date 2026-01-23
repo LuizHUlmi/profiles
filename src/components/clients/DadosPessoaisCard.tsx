@@ -208,7 +208,7 @@ export function DadosPessoaisCard({
             loading={isSubmitting}
             icon={<Save size={18} />}
           >
-            Salvar Dados
+            Salvar
           </Button>
         </div>
       </form>
